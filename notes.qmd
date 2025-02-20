@@ -1,6 +1,23 @@
 
 # Notes for Habitat Suitability assignment
 
+**AI overview:**
+IPython methods enhance interactive computing in Python, offering features beyond the standard interpreter. Some key methods include:
+
+- Tab Completion:
+Simplifies code writing by suggesting attributes and methods of objects or modules as you type.
+- Introspection:
+Provides detailed information about objects, functions, or modules using ? or ??.
+- Magic Commands:
+Special commands prefixed with % for tasks like timing code execution (%timeit), running external scripts (%run), or accessing shell commands (!).
+- Input Caching:
+Stores previous commands and outputs, accessible via _, __, ___ for outputs and _i, _ii, _iii or In[n] for inputs.
+- Rich Display:
+Enables richer object representations using _ipython_display_() or _repr_*_() methods for custom display formats like HTML or images.
+- History:
+Allows browsing and reusing previous commands across sessions.
+These methods streamline development, debugging, and exploration in interactive Python environments.
+
 ## Class
 
 A 
@@ -8,10 +25,29 @@ A
 is a function with output of an object that has new methods, which are in turn functions
 defined in the class.
 In addition, the `@property` decorator defines attributes for the object.
+The main use of classes are to:
 
-- [apppeears.py](https://github.com/earthlab/earthpy/blob/apppears/earthpy/appeears.py)
 - add functionality to class
-- streamline different functions with same parameter to keep track of metadata
+- streamline different functions with same parameters to keep track of metadata
+
+**AI overview:**
+In Python, a class serves as a blueprint for creating objects, which are instances that encapsulate data (attributes) and behavior (methods). Classes facilitate object-oriented programming (OOP) principles, enabling code reusability, modularity, and organization.
+A class is defined using the class keyword, followed by the class name and a colon. Inside the class block, attributes and methods are defined. The __init__ method is a special method, known as the constructor, which is automatically called when an object of the class is created. It is used to initialize the object's attributes.
+
+### References
+
+- [Python 3 Documentation](https://docs.python.org/3/)
+  - [3. Data model](https://docs.python.org/3/reference/datamodel.html)
+  - [9. Classes](https://docs.python.org/3/tutorial/classes.html)
+- [Python Classes and Objects (Geeks4Geeks)](https://www.geeksforgeeks.org/python-classes-and-objects/)
+- [Python Classes: The Power of Object-Oriented Programming (RealPython)](https://realpython.com/python-classes/)
+- [Google's Python Class](https://developers.google.com/edu/python)
+- [IPython Reference](https://ipython.org/ipython-doc/3/interactive/reference.html)
+  - [Built-in magic commands](https://ipython.readthedocs.io/en/stable/interactive/magics.html)
+- [earthpy](https://earthpy.readthedocs.io/en/latest/)
+  - [apppeears.py](https://github.com/earthlab/earthpy/blob/apppears/earthpy/appeears.py) (class Elsa created in `earthpy` package)
+
+### Examples
 
 Simple example with representer `__repr__`.
 
@@ -35,7 +71,7 @@ class ArrayDataFrame(pd.DataFrame): # inherits pd.DataFrame class
 ArrayDataFrame({'url': ['https://...']}).set_array_column([xr.DataArray()])
 ```
 
-# Slow example where class would help.
+Show example where class would help.
 
 ```{python}
 import random
@@ -71,34 +107,49 @@ print(my_df)
 
 ```{python}
 class FunDataFrame(pd.DataFrame):
-
+    # represent
     def __repr__(self):
         return 'stuff!'
 ```
 
 ```{python}
-my_df = FunDataFrame({
-    'id': list(range(df_len)),
-    'array': [gen_data_array(10) for _ in range(df_len)]})
 my_df
 ```
 
-Add ipython method (under the hood)
+Add ipython method (under the hood concept)
 
 ```{python}
 class FunDataFrame(pd.DataFrame):
-
+    # represent
     def __repr__(self):
         return 'stuff!'
-
+    # ipython method
     def _repr_html_(self):
         return 'more stuff!!!'
 ```
 
 ```{python}
-my_df = FunDataFrame({
-    'id': list(range(df_len)),
-    'array': [gen_data_array(10) for _ in range(df_len)]})
+my_df
+```
+
+
+```{python}
+class FunDataFrame(pd.DataFrame):
+
+    # attribute to make a dataframe
+    @property
+    def _df_for_repr_(self):
+        df = self.drop(columns = ['array']).copy()
+        return df
+    # represent
+    def __repr__(self):
+        return self._df_for_repr_.__repr__()
+    # ipython method
+    def _repr_html_(self):
+        return self._df_for_repr_._repr_html_()
+```
+
+```{python}
 my_df
 ```
 
@@ -107,10 +158,10 @@ Set up my dataframe class to show what I want
 ```{python}
 class FunDataFrame(pd.DataFrame):
 
-    # tell it what I define
+    # define array_types (does not appear to be used yet) 
     array_types = [xr.DataArray]
 
-    # make array as a property
+    # attribute to return `array_cols`
     @property
     def array_cols(self):
         array_cols = []
@@ -118,8 +169,8 @@ class FunDataFrame(pd.DataFrame):
             if type(self[col][0]) == xr.DataArray:
                 array_cols.append(col)
                 return array_cols
-            
 
+    # more complicated attribute
     @property
     def _df_for_repr_(self):
         df = self.drop(columns = self.array_cols).copy()
@@ -138,7 +189,6 @@ class FunDataFrame(pd.DataFrame):
     # represent
     def __repr__(self):
         return self._df_for_repr_.__repr__()
-
     # ipython method
     def _repr_html_(self):
         return self._df_for_repr_._repr_html_()
