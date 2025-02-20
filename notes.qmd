@@ -13,8 +13,11 @@ In addition, the `@property` decorator defines attributes for the object.
 - add functionality to class
 - streamline different functions with same parameter to keep track of metadata
 
-```
-import **stuff**
+Simple example with representer `__repr__`.
+
+```{python}
+import pandas as pd
+import xarray as xr
 
 class ArrayDataFrame(pd.DataFrame): # inherits pd.DataFrame class
 
@@ -26,61 +29,82 @@ class ArrayDataFrame(pd.DataFrame): # inherits pd.DataFrame class
         for_printing = self.copy()
         for_printing.arrays = [arr.min() for arr in self.arrays]
         return for_printing.__repr__()
-        
+```       
 
+```{python}
 ArrayDataFrame({'url': ['https://...']}).set_array_column([xr.DataArray()])
+```
 
 # Slow example where class would help.
+
+```{python}
 import random
 import numpy as np
+import xarray as xr
 
 def gen_data_array(size=10):
     data = (
         np.array([random.gauss(0,1) for _ in range(size**2)]).reshape(size, size))
     data = xr.DataArray(
         data = data,
-        coords = (
+        coords = {
             'x': [i * random.uniform(0,1) for i in range(size)],
-            'y': [i * random.uniform(0,1) for i in range(size)],
-        )
+            'y': [i * random.uniform(0,1) for i in range(size)]
+        },
+        dims=['x','y']
     )
-    return da
+    return data
+```
 
+```{python}
+gen_data_array(10)
+```
+
+```{python}
 df_len = 10
-md_df = pd.DataFrame([
+my_df = pd.DataFrame({
     'id': list(range(df_len)),
-    'array': [gen_data_array(10) for _ in range(df_len)]])
-my_df
+    'array': [gen_data_array(10) for _ in range(df_len)]
+})
+print(my_df)
 ```
 
-```
+```{python}
 class FunDataFrame(pd.DataFrame):
 
     def __repr__(self):
-    return 'stuff!'
+        return 'stuff!'
+```
 
-md_df = FunDataFrame([
+```{python}
+my_df = FunDataFrame({
     'id': list(range(df_len)),
-    'array': [gen_data_array(10) for _ in range(df_len)]])
+    'array': [gen_data_array(10) for _ in range(df_len)]})
 my_df
+```
 
-# Add ipython method (under the hood)
+Add ipython method (under the hood)
 
+```{python}
 class FunDataFrame(pd.DataFrame):
 
     def __repr__(self):
-    return 'stuff!'
+        return 'stuff!'
 
     def _repr_html_(self):
         return 'more stuff!!!'
+```
 
-md_df = FunDataFrame([
+```{python}
+my_df = FunDataFrame({
     'id': list(range(df_len)),
-    'array': [gen_data_array(10) for _ in range(df_len)]])
+    'array': [gen_data_array(10) for _ in range(df_len)]})
 my_df
+```
 
-# Set up my dataframe class to show what I want
+Set up my dataframe class to show what I want
 
+```{python}
 class FunDataFrame(pd.DataFrame):
 
     # tell it what I define
@@ -113,16 +137,18 @@ class FunDataFrame(pd.DataFrame):
     
     # represent
     def __repr__(self):
-        return self._df_for_repr_.__repr__()'
+        return self._df_for_repr_.__repr__()
 
     # ipython method
     def _repr_html_(self):
         return self._df_for_repr_._repr_html_()
+```
 
-md_df = FunDataFrame([
+```{python}
+my_df = FunDataFrame({
     'id': list(range(df_len)),
-    'array': [gen_data_array(10) for _ in range(df_len)]],
-    'array2': [gen_data_array(10) for _ in range(df_len)]])
+    'array': [gen_data_array(10) for _ in range(df_len)],
+    'array2': [gen_data_array(10) for _ in range(df_len)]})
 my_df
 ```
 
