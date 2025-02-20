@@ -39,6 +39,8 @@ As a rule of thumb, aim for 2-5 line code chuck for major structure steps.
 (updated project)
 - [Fall 5. Habitat Suitability Coding Challenge](https://cu-esiil-edu.github.io/esiil-learning-portal/foundations/notebooks/08-habitat/habitat.html)
 (original project with code hints)
+- [Notes](notes.qmd)
+(notes from class discussions)
 - [Yandell Fall Project](https://github.com/byandell-envsys/habitatSuitability)
   - [buffalo.md](https://github.com/byandell-envsys/habitatSuitability/blob/main/buffalo.md)
 (rendered Markdown)
