@@ -5,6 +5,150 @@ See
 [EDA Reference for Python Coding: Classes](https://github.com/byandell-envsys/EarthDataAnalytics/blob/main/references.md#classes)
 for references and discussion of classes.
 
+## Fuzzy Logic
+
+not sure if this is fuzzy logic or species dist?
+
+- https://canvas.colorado.edu/courses/115453/modules/items/6278820
+  - code: .gA?103.
+- https://cuboulder.zoom.us/rec/play/QFgqRKpVUAwDu4aJazn78I3FdNyVRXUXLdQILQCcB4o6DC9lRK45hVkM2Pb8NSsjiK8J1QrbsboIyXdk.wjmuYuUC8T1EG8T1?accessLevel=meeting&canPlayFromShare=true&from=share_recording_detail&startTime=1740463281000&componentName=rec-play&originRequestUrl=https%3A%2F%2Fcuboulder.zoom.us%2Frec%2Fshare%2FGtk19F9JjJayCXTHDnSPoQqrck0arcH32N8BurvZK3opQSCwhUVYDOYyECI0QoGA.ASZTR9CgYjN-DCsi%3FstartTime%3D1740463281000
+- https://pygbif.readthedocs.io/en/latest/
+- https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/notebooks/siberian-crane-species-download.ipynb 
+- earthlab-education and look at repos
+
+```{python}
+#pip install pygbif
+```
+
+```{python}
+## reproducible file paths
+import os
+from glob import glob
+import pathlib
+
+## GBIF packages
+import pygbif.occurrences as occ
+import pygbif.species as species
+from getpass import getpass
+
+## unzip and handle gbif data
+import zipfile
+import time
+
+## spatial data
+import geopandas as gpd
+import xrspatial as xr
+
+## other data
+import numpy as np
+import pandas as pd
+import rioxarray as rxr
+import rioxarray.merge as rxrm
+
+## invalid geometries
+from shapely.geometry import MultiPolygon, Polygon
+
+## viz data
+import holoviews as hv
+import hvplot.pandas
+import hvplot.xarray
+```
+
+```{python}
+# make repro file paths
+data_dir = os.path.join(
+    # home directory
+	pathlib.Path.home(),
+	
+	### eda directory
+	'earth-analytics',
+    'data',
+    'hab_suit'
+)
+os.makedirs(data_dir, exist_ok = True)
+```
+
+Sutdy species: Lupinus argenteus (silvery lupine)
+
+```{python}
+gbif_dir = os.path.join(data_dir, 'gbif_lupine')
+```
+
+```{python}
+reset_credentials = False
+
+credentials = dict(
+    GBIF_USER=(input, 'GBIF username:'),
+    GBIF_PWD=(getpass, 'GBIF password:'),
+    GBIF_EMAIL=(input, 'GBIF email:')
+)
+for env_variable, (prompt_func, prompt_text) in credentials.items():
+    if reset_credentials and (env_variable in os.environ):
+        os.environ.pop(env_variable)
+    if not env_variable in os.environ:
+        os.environ[env_variable] = prompt_func(prompt_text)
+```
+
+Now in GBIF. Supply species code.
+
+```{python}
+species_name = 'Lupinus argenteus'
+species_info = species.name_lookup(species_name, rank='SPECIES')
+# grab first
+first_result = species_info['results'][0]
+species_key = first_result['nubKey']
+first_result['species'], species_key
+```
+
+```{python}
+## assign species code
+species_key = 2964374
+```
+
+Do this once.
+Had trouble withing loop below so tried outside.
+
+```python
+gbif_query = occ.download([
+        f"speciesKey = {species_key}",
+        "hasCoordinate = True"
+    ])
+gbif_query
+```
+
+```{python}
+gbif_pattern = os.path.join(gbif_dir, '*.csv')
+## download once
+if not glob(gbif_pattern):
+    #***with error status code 503check your number of active downloads***
+    gbif_query = occ.download([
+        f"speciesKey = {species_key}",
+        "hasCoordinate = True"
+    ])
+
+    if not 'GBIF_DOWNLOAD_KEY' in os.environ:
+        os.environ['GBIF_DOWNLOAD_KEY'] = gbif_query[0]
+        download_key = os.environ['GBIF_DOWNLOAD_KEY']
+        # wait for download to build
+        wait = occ.download_meta(download_key)
+        while not wait == 'SUCCEEDED':
+            wait = occ.download_meta(download_key)['status']
+            time.sleep(5)
+
+    # download data
+    # ***'function' object has no attribute 'get'***
+    download_info = occ.download.get(
+        os.environ['GBIF_DOWNLOAD_KEY'],
+        path = data_dir
+    )
+    # unzip
+    with zipfile.ZipFile(download_info['path']) as download_zip:
+        download_zip.extractall(path = gbif_dir)
+
+## find csv file path
+gbif_path = glob(gbif_pattern)[0]
+```
+
 ## Class
 
 A 
