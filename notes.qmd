@@ -137,7 +137,7 @@ if not glob(gbif_pattern):
 
     # download data
     # ***'function' object has no attribute 'get'***
-    download_info = occ.download.get(
+    download_info = occ.download_get(
         os.environ['GBIF_DOWNLOAD_KEY'],
         path = data_dir
     )
