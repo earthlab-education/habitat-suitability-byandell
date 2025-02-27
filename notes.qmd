@@ -1,13 +1,166 @@
 
 # Notes for Habitat Suitability assignment
 
-See
-[EDA Reference for Python Coding: Classes](https://github.com/byandell-envsys/EarthDataAnalytics/blob/main/references.md#classes)
-for references and discussion of classes.
+## Fuzzy Logic Model
 
-## Fuzzy Logic
+You can find it hereLinks to an external site., or under the "Modules" section on Canvas. Elsa has also provided a link to a conversation with ChatGPTLinks to an external site. that she had on how to implement fuzzy models using scikit-fuzzy in Python, as another resource for you. 
 
-not sure if this is fuzzy logic or species dist?
+- [Elsa Zoom on Fuzzy](https://cuboulder.zoom.us/rec/play/EnTi2FyvDddFKN86INR7iypERZ59IHE5xxZXSS3R9vQAjJ4RczjpwYqFa63JhF9Hdq1Dv9U1iVZX65Vw.qfKwpud-sV9GAqKp)
+- [Elsa ChatGPT](https://chatgpt.com/share/67c094af-9724-8000-9004-6f25d266cd85)
+- [Fall 2024 habitatSuitability/4_build](https://github.com/byandell-envsys/habitatSuitability/blob/main/4_build.ipynb)
+- [SciKit Fuzzy](https://pypi.org/project/scikit-fuzzy/)
+
+A fuzzy logic model is one that is built on expert knowledge rather than
+training data. You may wish to use the
+[`scikit-fuzzy`](https://pythonhosted.org/scikit-fuzzy/)
+library, which includes many utilities for building this sort of model.
+In particular, it contains a number of **membership functions** that
+can convert your data into values from 0 to 1 using information such as,
+for example, the maximum, minimum, and optimal values for soil pH.
+
+To train a fuzzy logic habitat suitability model:
+
+1. Research S. nutans, and find out what optimal values are for each variable
+you are using (e.g. soil pH, slope, and current climatological annual precipitation). 
+1. For each **digital number** in each raster, assign a **continuous** value
+from 0 to 1 for how close that grid square is to the optimum range
+(1=optimal, 0=incompatible). 
+1. Combine your layers by multiplying them together.
+This will give you a single suitability number for each square.
+1. Optionally, you may apply a suitability threshold to make
+the most suitable areas pop on your map.
+
+> **Tip**
+>
+> If you use mathematical operators on a raster in Python, it will
+> automatically perform the operation for every number in the raster.
+> This type of operation is known as a **vectorized** function. **DO NOT
+> DO THIS WITH A LOOP!**. A vectorized function that operates on the
+> whole array at once will be much easier and faster.
+
+-   use hill functions to transform harmonized DataArrays into 0-1 DataArrays
+-   multiply them together
+  
+Resources:
+
+- [USDA Natural Resources Convervations Service: Plant Guide: Indiangrass]
+
+
+```{python}
+#conda install skfuzzy
+```
+
+Libraries
+
+```{python}
+#pip install ~/Documents/GitHub/landmapy
+```
+
+Libraries
+
+```{python}
+from math import floor, ceil
+import cartopy.crs as ccrs
+import geopandas as gpd
+import hvplot.pandas
+import hvplot.xarray
+import numpy as np
+import rioxarray as rxr
+import rioxarray.merge as rxrmerge
+import skfuzzy
+import xarray as xr
+```
+
+My version:
+
+```python
+from landmapy.initial import create_data_dir # create (or retrieve) data directory
+from landmapy.plot import plot_gdf_state # plot gdf with state overlay
+
+%store -r buffalo_gdf
+try:
+    buffalo_gdf
+except NameError:
+    data_dir = create_data_dir('habitat')
+    # Read all grasslands GeoJSON into `grassland_gdf`.
+    grassland_url = f"{data_dir}/National_Grassland_Units_(Feature_Layer).geojson"
+    grassland_gdf = gpd.read_file(grassland_url)
+    # Subset to desired locations.
+    buffalo_gdf = grassland_gdf.loc[grassland_gdf['GRASSLANDNAME'].isin(
+        ["Buffalo Gap National Grassland", "Oglala National Grassland"])]
+    %store buffalo_gdf
+    print("buffalo_gdf created and stored")
+else:
+    print("buffalo_gdf retrieved from StoreMagic")
+
+```
+
+Elsa's version
+
+```{python}
+grassland_url = (
+    "https://data.fs.usda.gov/geodata/edw/edw_resources/shp/S_USA.NationalGrassland.zip")
+grassland_gdf = gpd.read_file(grassland_url)
+grassland_gdf.info
+```
+
+```{python}
+oglala_gdf = grassland_gdf[grassland_gdf.GRASSLANDN.str.contains('Oglala')]
+(
+    oglala_gdf
+    .to_crs(ccrs.Mercator())
+    .hvplot(tiles='EsriNatGeo', line_width=3, fill_color=None)
+)
+```
+
+```{python}
+oglala_gdf
+```
+
+```{python}
+years = (2010, 2031)
+year_min = floor((min(years) - 1) // 5) * 5 + 1
+year_max = ceil((max(years) - 1) // 5) * 5 + 5
+print(year_min, year_max)
+
+```
+
+```{python}
+from landmapy.polaris import merge_soil
+
+ph_da = merge_soil(oglala_gdf, "ph", "mean", "60_100", 0.1)
+ph_da.plot()
+```
+
+```{python}
+from landmapy.thredds import process_maca_list
+
+maca_da_list = process_maca_list({'oglala': oglala_gdf}, years = (2011, 2040))
+```
+
+**Stuck here**
+
+```{python}
+maca_da = xr.concat(maca_da_list, dim='year')
+```
+
+```{python}
+maca_min_da = (
+    maca_da
+    .resample({'time': 'Y'})
+    .sum()
+    .min('time')
+    .rio.write_crs(4236) 
+    .rio.reproject_match(ph_da)
+)
+maca_min_da.plot()
+```
+
+```{python}
+```
+
+
+## GBIF review
 
 - https://canvas.colorado.edu/courses/115453/modules/items/6278820
   - code: .gA?103.
@@ -15,6 +168,10 @@ not sure if this is fuzzy logic or species dist?
 - https://pygbif.readthedocs.io/en/latest/
 - https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/notebooks/siberian-crane-species-download.ipynb 
 - earthlab-education and look at repos
+- [Fall 2024 Species](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell)
+  - [gbif.py](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/gbif.py)
+  - [sandhill_crane.qmd](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/sandhill_crane.qmd)
+  - [siberian_crane.qmd](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/siberian_crane.qmd)
 
 ```{python}
 #pip install pygbif
@@ -150,6 +307,10 @@ gbif_path = glob(gbif_pattern)[0]
 ```
 
 ## Class
+
+See
+[EDA Reference for Python Coding: Classes](https://github.com/byandell-envsys/EarthDataAnalytics/blob/main/references.md#classes)
+for references and discussion of classes.
 
 A 
 [class](https://docs.python.org/3/tutorial/classes.html)
