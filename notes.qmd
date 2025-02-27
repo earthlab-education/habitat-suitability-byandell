@@ -138,10 +138,32 @@ from landmapy.thredds import process_maca_list
 maca_da_list = process_maca_list({'oglala': oglala_gdf}, years = (2011, 2040))
 ```
 
-**Stuck here**
+**Stuck on next line**
 
 ```{python}
 maca_da = xr.concat(maca_da_list, dim='year')
+```
+
+```
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+Cell In[9], line 1
+----> 1 maca_da = xr.concat(maca_da_list, dim='year')
+
+File ~/miniconda3/envs/earth-analytics-python/lib/python3.11/site-packages/xarray/core/concat.py:290, in concat(objs, dim, data_vars, coords, compat, positions, fill_value, join, combine_attrs, create_index_for_new_dim)
+    277     return _dataset_concat(
+    278         objs,
+    279         dim=dim,
+   (...)
+    287         create_index_for_new_dim=create_index_for_new_dim,
+    288     )
+    289 else:
+--> 290     raise TypeError(
+    291         "can only concatenate xarray Dataset and DataArray "
+    292         f"objects, got {type(first_obj)}"
+    293     )
+
+TypeError: can only concatenate xarray Dataset and DataArray objects, got <class 'dict'>
 ```
 
 ```{python}
