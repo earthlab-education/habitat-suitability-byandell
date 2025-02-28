@@ -9,6 +9,8 @@ You can find it hereLinks to an external site., or under the "Modules" section o
 - [Elsa ChatGPT](https://chatgpt.com/share/67c094af-9724-8000-9004-6f25d266cd85)
 - [Fall 2024 habitatSuitability/4_build](https://github.com/byandell-envsys/habitatSuitability/blob/main/4_build.ipynb)
 - [SciKit Fuzzy](https://pypi.org/project/scikit-fuzzy/)
+- [SciKit Fuzzy readthedocs](https://scikit-fuzzy.readthedocs.io/en/latest/)
+- [Daniel Kahneman (2011) Thinking Fast and Slow](https://www.middlewaysociety.org/books/psychology-books/thinking-fast-and-slow-by-daniel-kahneman/)
 
 A fuzzy logic model is one that is built on expert knowledge rather than
 training data. You may wish to use the
@@ -133,59 +135,122 @@ ph_da.plot()
 ```
 
 ```{python}
+from landmapy.thredds import process_maca
+
+maca_df = process_maca({'oglala': oglala_gdf}, ['pr'], ['rcp45'], (2011, 2040))
+```
+
+```{python}
+maca_da = maca_df.loc[0, 'da']
+```
+
+**Stuck on next lines**
+
+```python
 from landmapy.thredds import process_maca_list
 
-maca_da_list = process_maca_list({'oglala': oglala_gdf}, years = (2011, 2040))
-```
-
-**Stuck on next line**
-
-```{python}
-maca_da = xr.concat(maca_da_list, dim='year')
-```
-
-```
----------------------------------------------------------------------------
-TypeError                                 Traceback (most recent call last)
-Cell In[9], line 1
-----> 1 maca_da = xr.concat(maca_da_list, dim='year')
-
-File ~/miniconda3/envs/earth-analytics-python/lib/python3.11/site-packages/xarray/core/concat.py:290, in concat(objs, dim, data_vars, coords, compat, positions, fill_value, join, combine_attrs, create_index_for_new_dim)
-    277     return _dataset_concat(
-    278         objs,
-    279         dim=dim,
-   (...)
-    287         create_index_for_new_dim=create_index_for_new_dim,
-    288     )
-    289 else:
---> 290     raise TypeError(
-    291         "can only concatenate xarray Dataset and DataArray "
-    292         f"objects, got {type(first_obj)}"
-    293     )
-
-TypeError: can only concatenate xarray Dataset and DataArray objects, got <class 'dict'>
-```
-
-```{python}
-maca_min_da = (
-    maca_da
-    .resample({'time': 'Y'})
+maca_da_list = process_maca_list({'oglala': oglala_gdf}, ['pr'], ['rcp45'], (2011, 2040))
+maca_da = (
+    xr.concat(maca_da, dim='time')
+    .resample({'time': 'YE'})
     .sum()
-    .min('time')
     .rio.write_crs(4236) 
     .rio.reproject_match(ph_da)
 )
-maca_min_da.plot()
+```
+
+This should be similar to Elsa's code to the `periods` list,
+but I could not figure out how to work with this.
+Instead, I pulled the da out of the df in code below,
+which is part of code in my `maca_year` code.
+
+```{python}
+precip_da = (
+    xr.concat(maca_da, dim='time')
+    .resample({'time': 'YE'})
+    .sum()
+    .rio.write_crs(4236) 
+    .rio.reproject_match(ph_da)
+)
 ```
 
 ```{python}
+precip_min_da = precip_da.min('time')
+precip_max_da = precip_da.max('time')
+precip_mean_da = precip_da.mean('time')
+precip_mean_da.plot()
 ```
 
+Precipitation in mm. (11-45in = 279-1143mm)
+
+### Non-fuzzy logic model
+
+```{python}
+((precip_min_da > 330) & (precip_max_da < 700)).plot()
+```
+
+```{python}
+precit_min_da.plot.hist()
+```
+ 
+### Fuzzy logic
+
+[trimf](https://scikit-fuzzy.readthedocs.io/en/latest/api/skfuzzy.html?highlight=trimf#skfuzzy.trimf)
+is triangle.
+It takes a 1-D array, but we have 2-D array
+
+```{python}
+ph = [4.8, 8]
+tri = [ph[0], (ph[0] + ph[1])/2, ph[1]]
+shape = ph_da.values.shape
+ph_fuzz = ph_da.copy()
+ph_fuzz.values = (
+    np.reshape(
+        skfuzzy.trimf(ph_da.values.flatten(), tri),
+    shape)
+)
+ph_fuzz.plot()
+```
+
+```{python}
+trap = [ph[0], (2 * ph[0] + ph[1])/3, (ph[0] + 2 * ph[1]) /3, ph[1]]
+shape = ph_da.values.shape
+ph_fuzz = ph_da.copy()
+ph_fuzz.values = (
+    np.reshape(
+        skfuzzy.trapmf(ph_da.values.flatten(), trap),
+    shape)
+)
+ph_fuzz.plot()
+```
+
+```{python}
+pr = [310, 700]
+trap = [pr[0], (2 * pr[0] + pr[1])/3, (pr[0] + 2 * pr[1]) /3, pr[1]]
+shape = precip_min_da.values.shape
+precip_fuzz = precip_min_da.copy()
+precip_fuzz.values = (
+    np.reshape(
+        skfuzzy.trapmf(precip_min_da.values.flatten(), trap),
+    shape)
+)
+precip_fuzz.plot()
+```
+
+[dsw_mult](https://scikit-fuzzy.readthedocs.io/en/latest/api/skfuzzy.html?highlight=dsw_mult#skfuzzy.dsw_mult)
+
+but could use regular mult
+
+```{python}
+(ph_fuzz * precip_fuzz).plot(robust=True)
+```
+
+```{python}
+((ph_fuzz * precip_fuzz) > 0.05).plot()
+```
 
 ## GBIF review
 
-- https://canvas.colorado.edu/courses/115453/modules/items/6278820
-  - code: .gA?103.
 - https://cuboulder.zoom.us/rec/play/QFgqRKpVUAwDu4aJazn78I3FdNyVRXUXLdQILQCcB4o6DC9lRK45hVkM2Pb8NSsjiK8J1QrbsboIyXdk.wjmuYuUC8T1EG8T1?accessLevel=meeting&canPlayFromShare=true&from=share_recording_detail&startTime=1740463281000&componentName=rec-play&originRequestUrl=https%3A%2F%2Fcuboulder.zoom.us%2Frec%2Fshare%2FGtk19F9JjJayCXTHDnSPoQqrck0arcH32N8BurvZK3opQSCwhUVYDOYyECI0QoGA.ASZTR9CgYjN-DCsi%3FstartTime%3D1740463281000
 - https://pygbif.readthedocs.io/en/latest/
 - https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/notebooks/siberian-crane-species-download.ipynb 
