@@ -5,11 +5,13 @@
 
 You can find it hereLinks to an external site., or under the "Modules" section on Canvas. Elsa has also provided a link to a conversation with ChatGPTLinks to an external site. that she had on how to implement fuzzy models using scikit-fuzzy in Python, as another resource for you. 
 
-- [Elsa Zoom on Fuzzy](https://cuboulder.zoom.us/rec/play/EnTi2FyvDddFKN86INR7iypERZ59IHE5xxZXSS3R9vQAjJ4RczjpwYqFa63JhF9Hdq1Dv9U1iVZX65Vw.qfKwpud-sV9GAqKp)
-- [Elsa ChatGPT](https://chatgpt.com/share/67c094af-9724-8000-9004-6f25d266cd85)
+- Elsa demo
+  - [Elsa Video on Fuzzy Logic](https://cuboulder.zoom.us/rec/play/EnTi2FyvDddFKN86INR7iypERZ59IHE5xxZXSS3R9vQAjJ4RczjpwYqFa63JhF9Hdq1Dv9U1iVZX65Vw.qfKwpud-sV9GAqKp)
+  - [Elsa ChatGPT](https://chatgpt.com/share/67c094af-9724-8000-9004-6f25d266cd85)
+  - [habitat_example.qmd](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/climate.qmd)
 - [Fall 2024 habitatSuitability/4_build](https://github.com/byandell-envsys/habitatSuitability/blob/main/4_build.ipynb)
 - [SciKit Fuzzy](https://pypi.org/project/scikit-fuzzy/)
-- [SciKit Fuzzy readthedocs](https://scikit-fuzzy.readthedocs.io/en/latest/)
+  - [SciKit Fuzzy readthedocs](https://scikit-fuzzy.readthedocs.io/en/latest/)
 - [Daniel Kahneman (2011) Thinking Fast and Slow](https://www.middlewaysociety.org/books/psychology-books/thinking-fast-and-slow-by-daniel-kahneman/)
 
 A fuzzy logic model is one that is built on expert knowledge rather than
@@ -120,14 +122,6 @@ oglala_gdf
 ```
 
 ```{python}
-years = (2010, 2031)
-year_min = floor((min(years) - 1) // 5) * 5 + 1
-year_max = ceil((max(years) - 1) // 5) * 5 + 5
-print(year_min, year_max)
-
-```
-
-```{python}
 from landmapy.polaris import merge_soil
 
 ph_da = merge_soil(oglala_gdf, "ph", "mean", "60_100", 0.1)
@@ -140,29 +134,47 @@ from landmapy.thredds import process_maca
 maca_df = process_maca({'oglala': oglala_gdf}, ['pr'], ['rcp45'], (2011, 2040))
 ```
 
+This part differs from Elsa's demo.
+She ended her loop with (ignoring buffer) `periods.append(period_da)`,
+so there is just the DataArray `periods`.
+
+For the Fall project, I constructed (in `process_maca()`)
+I did `maca_da_list.append(dict(..., da = maca_da))`
+so that the DataArray ended up as part of the `dict()`.
+Then I converted to a DataFrame `maca_df = pd.DataFrame(maca_da_list)`.
+To pull out the DataFrame `da` requires the following step:
+
 ```{python}
-maca_da = maca_df.loc[0, 'da']
+maca0_da = maca_df.loc[1, 'da']
 ```
 
-**Stuck on next lines**
-
-```python
-from landmapy.thredds import process_maca_list
-
-maca_da_list = process_maca_list({'oglala': oglala_gdf}, ['pr'], ['rcp45'], (2011, 2040))
+```{python}
 maca_da = (
-    xr.concat(maca_da, dim='time')
-    .resample({'time': 'YE'})
-    .sum()
-    .rio.write_crs(4236) 
-    .rio.reproject_match(ph_da)
+    xr.concat(maca_df['da'].tolist(), dim='five_year')
+    .isel(five_year=0)
 )
 ```
 
-This should be similar to Elsa's code to the `periods` list,
-but I could not figure out how to work with this.
-Instead, I pulled the da out of the df in code below,
-which is part of code in my `maca_year` code.
+I checked with the following code that the dimension 'five_year'
+appears to be redundant.
+Hoping this is true.
+
+```python
+maca_da = xr.concat(maca_df['da'].tolist(), dim='five_year')
+m0 = maca_da.isel(five_year=0)
+m1 = maca_da.isel(five_year=2)
+(m0-m1).sum()
+```
+
+```{python}
+print(maca0_da.dims)
+print(maca0_da.shape)
+print(maca_da.dims)
+print(maca_da.shape)
+```
+
+Sum over time within each year over the 30 years ('time'),
+reprojecting to shape of `ph_da`.
 
 ```{python}
 precip_da = (
@@ -175,10 +187,26 @@ precip_da = (
 ```
 
 ```{python}
+print(precip_da.shape)
+print(precip_da.dims)
+```
+
+```{python}
 precip_min_da = precip_da.min('time')
 precip_max_da = precip_da.max('time')
 precip_mean_da = precip_da.mean('time')
+```
+
+```{python}
 precip_mean_da.plot()
+```
+
+```{python}
+precip_min_da.plot()
+```
+
+```{python}
+precip_max_da.plot()
 ```
 
 Precipitation in mm. (11-45in = 279-1143mm)
@@ -186,7 +214,7 @@ Precipitation in mm. (11-45in = 279-1143mm)
 ### Non-fuzzy logic model
 
 ```{python}
-((precip_min_da > 330) & (precip_max_da < 700)).plot()
+((precip_mean_da > 95) & (precip_max_da < 800)).plot()
 ```
 
 ```{python}
