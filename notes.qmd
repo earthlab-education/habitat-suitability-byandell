@@ -57,7 +57,7 @@ Resources:
 Libraries
 
 ```{python}
-#pip install ~/Documents/GitHub/landmapy
+#pip install git+https://github.com/byandell-envsys/landmapy.git
 ```
 
 Libraries
