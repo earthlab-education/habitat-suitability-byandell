@@ -1,0 +1,43 @@
+```{python}
+import pandas as pd
+import xarray as xr
+
+# Sample DataFrame with DataArrays
+data = {
+    'site_name': ['Site1', 'Site2', 'Site3', 'Site4', 'Site5', 'Site6'],
+    'scenario': ['Scenario1', 'Scenario2', 'Scenario3', 'Scenario4', 'Scenario5', 'Scenario6'],
+    'year': [2020, 2021, 2022, 2023, 2024, 2025],
+    'climate': ['Climate1', 'Climate2', 'Climate3', 'Climate4', 'Climate5', 'Climate6'],
+    'da': [xr.DataArray([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], dims=['time', 'lat', 'lon'], name='da1'),
+           xr.DataArray([[[9, 10], [11, 12]], [[13, 14], [15, 16]]], dims=['time', 'lat', 'lon'], name='da2'),
+           xr.DataArray([[[17, 18], [19, 20]], [[21, 22], [23, 24]]], dims=['time', 'lat', 'lon'], name='da3'),
+           xr.DataArray([[[25, 26], [27, 28]], [[29, 30], [31, 32]]], dims=['time', 'lat', 'lon'], name='da4'),
+           xr.DataArray([[[33, 34], [35, 36]], [[37, 38], [39, 40]]], dims=['time', 'lat', 'lon'], name='da5'),
+           xr.DataArray([[[41, 42], [43, 44]], [[45, 46], [47, 48]]], dims=['time', 'lat', 'lon'], name='da6')]
+}
+
+df = pd.DataFrame(data)
+
+# Concatenate the DataArrays in the 'da' column
+concatenated_da = xr.concat(df['da'].tolist(), dim='five_year')
+
+# Sum across the dimensions 'five_year' and 'time' to get a 2-D array
+summed_da = concatenated_da.sum(dim=['five_year', 'time'])
+
+print(summed_da)
+```
+
+```{python}
+print(concatenated_da.dims)
+print(concatenated_da.shape)
+print(len(concatenated_da.values.flatten()))
+print(summed_da.dims)
+print(summed_da.shape)
+print(len(summed_da.values.flatten()))
+```
+
+```{python}
+first = concatenated_da.isel(five_year=0)
+print(first.shape)
+first
+```
