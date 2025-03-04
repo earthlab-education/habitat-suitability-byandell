@@ -131,8 +131,37 @@ which puts sandy loam and loamy sand at 50-85% sand.
 
 ![](https://www.gardeners.com/globalassets/articles/gardening/2014content/9120-soil-texture-triangle-sample.png){fig-align="center"}
 
-I could not find information on slope or aspect
-but I have seen blue stem on flat areas and slopes.
+According to the USDA Natural Resources Convervations Service: Plant Guide:
+[Little Bluestem](https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_scsc.pdf)
+"is a tallgrass prairie increaser and mixed prairie decreaser.
+Little bluestem typically occurs on dry
+upland sites, especially on ridges, hilltops, and steep slopes.
+It also occurs on limey sub-irrigated sites and in prairie fens.
+It is found in areas receiving 10 to 60 inches of mean annual precipitation and plant hardiness zones 3 to 9."
+[Plant profile page](https://plants.usda.gov/plant-profile/SCHIZ4)
+
+[Big Bluestem](https://www.nrcs.usda.gov/sites/default/files/2022-09/BigBluestem.pdf)
+"is climatically adapted throughout the
+Midwest and Northeast on moderately well drained
+through excessively well drained soils.
+It is adapted to a range of other soil limitations
+such as shallow depth, low pH, and low fertility."
+[Plant profile page](https://plants.usda.gov/plant-profile/ANGE).
+
+While I could use
+[GBIF](https://www.gbif.org/)
+to find crowd-sourced records,
+these two species are widely found across North America.
+For more on using GBIF with Python, see
+
+- [GBIF Class Notes](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/notes.md#gbif-review-25-feb-2025)
+  - [notes.qmd](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/notes.qmd)
+  - [notes_gbif.qmd](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/notes_gbif.qmd)
+- [gbif.py](https://github.com/byandell-envsys/landmapy/blob/main/landmapy/gbif.py)
+module in
+[landmapy](https://github.com/byandell-envsys/landmapy)
+package
+  - [siberian_crane.qmd](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/siberian_crane.qmd) (use of `gbif.py` module)
 
 ### Sites
 

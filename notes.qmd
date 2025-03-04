@@ -12,7 +12,7 @@ execute:
 
 ## Fuzzy Logic Model 27 Feb 2025
 
-You can find it hereLinks to an external site., or under the "Modules" section on Canvas. Elsa has also provided a link to a conversation with ChatGPTLinks to an external site. that she had on how to implement fuzzy models using scikit-fuzzy in Python, as another resource for you. 
+You can find it under the "Modules" section on Canvas. Elsa has also provided a link to a conversation with ChatGPTLinks to an external site. that she had on how to implement fuzzy models using scikit-fuzzy in Python, as another resource for you. 
 
 - Elsa demo
   - [Elsa Video on Fuzzy Logic](https://canvas.colorado.edu/courses/115453/modules/items/6282073)
@@ -294,7 +294,7 @@ but could use regular mult
 - https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/notebooks/siberian-crane-species-download.ipynb 
 - earthlab-education and look at repos
 - [Fall 2024 Species](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell)
-  - [gbif.py](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/gbif.py)
+  - [gbif.py](https://github.com/byandell-envsys/landmapy/blob/main/landmapy/gbif.py)
   - [sandhill_crane.qmd](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/sandhill_crane.qmd)
   - [siberian_crane.qmd](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/siberian_crane.qmd)
 

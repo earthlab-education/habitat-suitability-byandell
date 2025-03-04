@@ -6,7 +6,7 @@ jupyter: python3
 Demo going through parts of Step 1 of the latest coding assignment.
 Katherine Siegel, 25 Feb 2025.
 
-- [Recording](https://cuboulder.zoom.us/rec/play/QFgqRKpVUAwDu4aJazn78I3FdNyVRXUXLdQILQCcB4o6DC9lRK45hVkM2Pb8NSsjiK8J1QrbsboIyXdk.wjmuYuUC8T1EG8T1?accessLevel=meeting&canPlayFromShare=true&from=share_recording_detail&startTime=1740463281000&componentName=rec-play&originRequestUrl=https%3A%2F%2Fcuboulder.zoom.us%2Frec%2Fshare%2FGtk19F9JjJayCXTHDnSPoQqrck0arcH32N8BurvZK3opQSCwhUVYDOYyECI0QoGA.ASZTR9CgYjN-DCsi%3FstartTime%3D1740463281000)
+- [Recording](https://canvas.colorado.edu/courses/115453/modules/items/6278820)
 - [Protected Areas Database (PAD-US)](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download)
 
 #### Prep workspace
