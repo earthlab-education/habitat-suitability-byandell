@@ -27,6 +27,13 @@ Data sources
 
 - soil: POLARIS (see cited paper)
 
+```
+soil_da = rxr.open_rasterio(
+	soil_url,
+	mask_and_scale=True
+)
+```
+
 
 ## Fuzzy Logic Model 27 Feb 2025
 
