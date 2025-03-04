@@ -1,5 +1,10 @@
+---
+title: "EDA Notes for Habitat Suitability"
+execute:
+  eval: false
+---
 
-# Notes for Habitat Suitability assignment
+# EDA Notes for Habitat Suitability
 
 - [Fuzzy Logic Model 27 Feb 2025](#fuzzy-logic-model-27-feb-2025)
 - [GBIF review 25 Feb 2025](#gbif-review-25-feb-2025)
@@ -51,8 +56,7 @@ the most suitable areas pop on your map.
   
 Resources:
 
-- [USDA Natural Resources Convervations Service: Plant Guide: Indiangrass]
-
+- [USDA Natural Resources Convervations Service: Plant Guide: Indiangrass](https://www.nrcs.usda.gov/plantmaterials/etpmcpg13196.pdf)
 
 ```{python}
 #conda install skfuzzy
@@ -222,7 +226,7 @@ Precipitation in mm. (11-45in = 279-1143mm)
 ```
 
 ```{python}
-precit_min_da.plot.hist()
+precip_min_da.plot.hist()
 ```
  
 ### Fuzzy logic

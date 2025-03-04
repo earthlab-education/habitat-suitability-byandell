@@ -5,6 +5,8 @@ title: EDA Notes for Habitat Suitability
 toc-title: Table of contents
 ---
 
+# EDA Notes for Habitat Suitability
+
 -   [Fuzzy Logic Model 27 Feb 2025](#fuzzy-logic-model-27-feb-2025)
 -   [GBIF review 25 Feb 2025](#gbif-review-25-feb-2025)
 -   [Classes 20 Feb 2025](#classes-20-feb-2025)
