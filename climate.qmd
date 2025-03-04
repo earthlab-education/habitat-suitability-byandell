@@ -138,7 +138,7 @@ Little bluestem typically occurs on dry
 upland sites, especially on ridges, hilltops, and steep slopes.
 It also occurs on limey sub-irrigated sites and in prairie fens.
 It is found in areas receiving 10 to 60 inches of mean annual precipitation and plant hardiness zones 3 to 9."
-[Plant profile page](https://plants.usda.gov/plant-profile/SCHIZ4)
+[Plant profile page](https://plants.usda.gov/plant-profile/SCHIZ4).
 
 [Big Bluestem](https://www.nrcs.usda.gov/sites/default/files/2022-09/BigBluestem.pdf)
 "is climatically adapted throughout the
@@ -193,6 +193,7 @@ National Grasslands.
 Resources:
 
 - [PAD-US](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview)
+  - [PADUS4_0_State_SD_GDB](https://www.sciencebase.gov/catalog/item/652d4f80d34e44db0e2ee45c#:~:text=PADUS4_0_State_SD_GDB) (834KB zip)
 - Duan K, Sun G, Sun S et al. (2016)
 Divergence of ecosystem services in U.S. National Forests and Grasslands under a changing climate. Sci Rep 6, 24441.
 [DOI: 10.1038/srep24441](https://doi.org/10.1038/srep24441)
@@ -487,7 +488,7 @@ The MACAv2 dataset is accessible from their
 Include an arrangement of sites, models, emissions scenarios,
 and time periods that will help you to answer your scientific question.
 
-Project precipation `pr` under representative concentration pathway scenarios `rcp45` and `rcp85` for years `2026-2030`.
+Project precipation `pr` under representative concentration pathway scenarios `rcp45` and `rcp85` for years `2006-2025` and `2036-2065`.
 **To be redone with
 
 - new 30-year date ranges
@@ -512,9 +513,11 @@ from landmapy.thredds import process_maca, maca_year
 ```
 
 ```{python}
-maca_df = process_maca({'buffalo': buffalo_gdf})
+maca_df = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2025])
 maca_df[['site_name', 'scenario', 'climate', 'year']]
 ```
+
+Want to figure out how to use slider as in species project to display all 30 years or sum over years.
 
 ```{python}
 #| label: fig-maca
