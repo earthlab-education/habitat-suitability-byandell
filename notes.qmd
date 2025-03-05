@@ -12,17 +12,6 @@ execute:
 
 ## Notes 4 Mar 2025
 
-HoloViews with DataArray.
-Want to do this with slider.
-
-- [HoloViews Gridded Dataset](https://holoviews.org/user_guide/Gridded_Datasets.html)
-- [HV Gridded getting started](https://holoviews.org/getting_started/Gridded_Datasets.html)
-- [slider](https://stackoverflow.com/questions/76318661/holoviews-interactive-plot-of-gridded-data-with-slider-on-top)
-- [Interactive plots using hvplot](https://tutorial.xarray.dev/intermediate/hvplot.html)
-- [Dimensioned Containers](https://holoviews.org/user_guide/Dimensioned_Containers.html)
-- [HoloViews Overview
-](https://dash.plotly.com/holoviews)
-
 Data sources
 
 - soil: POLARIS (see cited paper)
