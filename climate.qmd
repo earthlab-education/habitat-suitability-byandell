@@ -229,6 +229,16 @@ plot_gdf_state(buffalo_gdf, aiannh=True)
 Python code detail:
 
 ```{python}
+#| eval: False
+pip install --quiet ~/Documents/GitHub/landmapy
+```
+
+```{python}
+#| eval: False
+pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
+```
+
+```{python}
 import geopandas as gpd # read geojson file into gdf
 from landmapy.initial import create_data_dir # create (or retrieve) data directory
 from landmapy.plot import plot_gdf_state # plot gdf with state overlay
@@ -433,15 +443,6 @@ from landmapy.srtm import srtm_download, srtm_slope
 ```{python}
 project_dir = create_data_dir('habitat')
 elevation_dir = create_data_dir('habitat/srtm')
-elevation_dir
-```
-
-```{python}
-earthaccess.login()
-datasets = earthaccess.search_datasets(keyword='SRTM DEM', count=11)
-for dataset in datasets:
-    print(dataset['umm']['ShortName'], dataset['umm']['EntryTitle']) # want 'umn'
-# want SRTMGL1? 1 arc second = 30m (also, 3, 30 arc second)
 ```
 
 ```{python}
@@ -500,29 +501,35 @@ Project precipation `pr` under representative concentration pathway scenarios `r
 Pseudocode:
 
 ```python
-maca_df = process_maca({'buffalo': buffalo_gdf})
+info_df, maca_da = process_maca({'buffalo': buffalo_gdf})
 maca_2027_year_da = maca_year(maca_df, 0, 2027) # 0 = `rcp85`, 1 = `rcp45`
 plot_gdf_da(buffalo_gdf, maca_2027_year_da)
 ```
 
 Python code detail:
 
-
 ```{python}
 from landmapy.thredds import process_maca, maca_year
+from landmapy.plot import plot_gdf_da
 ```
 
 ```{python}
-maca_df = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2025])
-maca_df[['site_name', 'scenario', 'climate', 'year']]
+info_df, maca_da = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2025])
+info_df
 ```
 
 Want to figure out how to use slider as in species project to display all 30 years or sum over years.
 
 ```{python}
 #| label: fig-maca
-maca_2027_year_da = maca_year(maca_df, 0, 2027) # 0 = `rcp85`, 1 = `rcp45`
-plot_gdf_da(buffalo_gdf, maca_2027_year_da)
+maca_2010_year_da = maca_year(maca_da[0], 2010) # 0 = `rcp85`, 1 = `rcp45`
+plot_gdf_da(buffalo_gdf, maca_2010_year_da)
+```
+
+```{python}
+#| label: fig-maca
+maca_2010_year_da = maca_year(maca_da[1], 2010) # 0 = `rcp85`, 1 = `rcp45`
+plot_gdf_da(buffalo_gdf, maca_2010_year_da)
 ```
 
 Repeat for `rcp45`. Make nice plot pair.
