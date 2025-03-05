@@ -522,14 +522,13 @@ Want to figure out how to use slider as in species project to display all 30 yea
 
 ```{python}
 #| label: fig-maca
-maca_2010_year_da = maca_year(maca_da[0], 2010) # 0 = `rcp85`, 1 = `rcp45`
-plot_gdf_da(buffalo_gdf, maca_2010_year_da)
+# 0 = `rcp85`, 1 = `rcp45`
+plot_gdf_da(buffalo_gdf, maca_year(maca_da[0], 2010))
+plot_gdf_da(buffalo_gdf, maca_year(maca_da[1], 2010))
 ```
 
 ```{python}
-#| label: fig-maca
-maca_2010_year_da = maca_year(maca_da[1], 2010) # 0 = `rcp85`, 1 = `rcp45`
-plot_gdf_da(buffalo_gdf, maca_2010_year_da)
+%store maca_da
 ```
 
 Repeat for `rcp45`. Make nice plot pair.
@@ -542,6 +541,25 @@ Make sure to include a description of the climate data and how you selected your
 Include a citation of the MACAv2 data</p></div></div>
 
 YOUR CLIMATE DATA DESCRIPTION AND CITATIONS HERE
+
+#### Dynamic Slider
+
+```{python}
+#| eval: False
+pip install ipympl
+```
+
+```{python}
+%run slider.py
+```
+
+```{python}
+%matplotlib widget
+```
+
+```{python}
+plot_slider(maca_da[1])
+```
 
 ## STEP 3: HARMONIZE DATA
 
