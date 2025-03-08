@@ -4,6 +4,22 @@ title: Habitat suitability under climate change
 toc-title: Table of contents
 ---
 
+Left to do:
+
+-   Expand out all datasets for comparison.
+    -   Code is in place.
+-   Harmonize all datasets and build fuzzy logic.
+    -   `reproject` code in place.
+    -   see [notes on
+        skfuzzy](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#fuzzy-logic-model-27-feb-2025)
+-   Spruce up graphics, possibly using
+    -   slider widget (see code below in [Climate model
+        data](#climate-model-data) section)
+    -   matplotlib with multiple subplots (see [6 Mar
+        notes](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#notes-6-mar-2025))
+
+## INTRODUCTION
+
 Our changing climate is changing where key grassland species can live,
 and grassland management and restoration practices will need to take
 this into account ([Kane et
@@ -141,8 +157,37 @@ which puts sandy loam and loamy sand at 50-85% sand.
 
 ![](https://www.gardeners.com/globalassets/articles/gardening/2014content/9120-soil-texture-triangle-sample.png){fig-align="center"}
 
-I could not find information on slope or aspect but I have seen blue
-stem on flat areas and slopes.
+According to the USDA Natural Resources Convervations Service: Plant
+Guide: [Little
+Bluestem](https://plants.usda.gov/DocumentLibrary/plantguide/pdf/pg_scsc.pdf)
+"is a tallgrass prairie increaser and mixed prairie decreaser. Little
+bluestem typically occurs on dry upland sites, especially on ridges,
+hilltops, and steep slopes. It also occurs on limey sub-irrigated sites
+and in prairie fens. It is found in areas receiving 10 to 60 inches of
+mean annual precipitation and plant hardiness zones 3 to 9." [Plant
+profile page](https://plants.usda.gov/plant-profile/SCHIZ4).
+
+[Big
+Bluestem](https://www.nrcs.usda.gov/sites/default/files/2022-09/BigBluestem.pdf)
+"is climatically adapted throughout the Midwest and Northeast on
+moderately well drained through excessively well drained soils. It is
+adapted to a range of other soil limitations such as shallow depth, low
+pH, and low fertility." [Plant profile
+page](https://plants.usda.gov/plant-profile/ANGE).
+
+While I could use [GBIF](https://www.gbif.org/) to find crowd-sourced
+records, these two species are widely found across North America. For
+more on using GBIF with Python, see
+
+-   [GBIF Class
+    Notes](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/notes.md#gbif-review-25-feb-2025)
+    -   [notes.qmd](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/notes.qmd)
+    -   [notes_gbif.qmd](https://github.com/earthlab-education/habitat-suitability-byandell/blob/main/notes_gbif.qmd)
+-   [gbif.py](https://github.com/byandell-envsys/landmapy/blob/main/landmapy/gbif.py)
+    module in [landmapy](https://github.com/byandell-envsys/landmapy)
+    package
+    -   [siberian_crane.qmd](https://github.com/earthlab-education/species-distribution-coding-challenge-byandell/blob/main/siberian_crane.qmd)
+        (use of `gbif.py` module)
 
 ### Sites
 
@@ -166,8 +211,35 @@ This project examines habitat suitability for [Blue
 Stem](https://greg.app/big-bluestem-soil/) in the [Buffalo
 Gap](https://www.fs.usda.gov/recarea/nebraska/recarea/?recid=30329) and
 [Oglala](https://www.fs.usda.gov/recarea/nebraska/recarea/?recid=30328)
-National Grasslands. See also
-[PAD-US](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview).
+National Grasslands.
+
+Resources:
+
+-   [PAD-US](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview)
+    -   [PADUS4_0_State_SD_GDB](https://www.sciencebase.gov/catalog/item/652d4f80d34e44db0e2ee45c#:~:text=PADUS4_0_State_SD_GDB)
+        (834KB zip)
+-   Duan K, Sun G, Sun S et al. (2016) Divergence of ecosystem services
+    in U.S. National Forests and Grasslands under a changing climate.
+    Sci Rep 6, 24441. [DOI:
+    10.1038/srep24441](https://doi.org/10.1038/srep24441)
+-   Brown RN, Percivalle C, Narkiewicz S, DeCuollo S (2010) Relative
+    Rooting Depths of Native Grasses and Amenity Grasses with Potential
+    for Use on Roadsides in New England. HortScience 45: 393-400. [DOI:
+    10.21273/HORTSCI.45.3.393](https://doi.org/10.21273/HORTSCI.45.3.393)
+-   [USFS National
+    Grasslands](https://www.fs.usda.gov/managing-land/national-forests-grasslands/national-grasslands)
+    -   [Units
+        ZIPfile](https://data.fs.usda.gov/geodata/edw/edw_resources/shp/S_USA.NationalGrassland.zip)
+    -   [USFS Maps](https://www.fs.usda.gov/visit/maps)
+    -   [USFS ArcGIS Grassland
+        Units](https://data-usfs.hub.arcgis.com/datasets/usfs::national-grassland-units-feature-layer/explore?location=41.300146%2C-107.829591%2C6.23)
+        -   [USFS IVM Digital Map](https://www.fs.usda.gov/ivm/)
+        -   [Download PDF or JPG
+            Map](https://experience.arcgis.com/experience/9ab8d03e2bec4d7fbfc27ba836e70aed/page/Forest-Series/#data_s=id%3AdataSource_2-Forest_Series_Index_6205%3A1430)
+        -   [ArcGIS Map
+            Viewer](https://www.arcgis.com/home/webmap/viewer.html)
+        -   Great resource for plant growth characteristics:
+            <https://plants.usda.gov/>
 
 These contiguous grasslands are located in [Oceti Sakowin
 Oyate](https://americanindian.si.edu/nk360/plains-belonging-nation/oceti-sakowin),
@@ -191,13 +263,25 @@ Python code detail:
 
 ::: {.cell execution_count="1"}
 ``` {.python .cell-code}
+pip install --quiet ~/Documents/GitHub/landmapy
+```
+:::
+
+::: {.cell execution_count="2"}
+``` {.python .cell-code}
+pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
+```
+:::
+
+::: {.cell execution_count="3"}
+``` {.python .cell-code}
 import geopandas as gpd # read geojson file into gdf
 from landmapy.initial import create_data_dir # create (or retrieve) data directory
 from landmapy.plot import plot_gdf_state # plot gdf with state overlay
 ```
 :::
 
-:::: {.cell execution_count="2"}
+:::: {.cell execution_count="4"}
 ``` {.python .cell-code}
 %store -r buffalo_gdf
 try:
@@ -224,7 +308,7 @@ else:
 Black line separates South Dakota from Nebraska; red line outlines part
 of Pine Ridge Reservation.
 
-:::: {.cell execution_count="3"}
+:::: {.cell execution_count="5"}
 ``` {.python .cell-code}
 plot_gdf_state(buffalo_gdf, aiannh=True)
 ```
@@ -336,14 +420,14 @@ plot_gdf_da(buffalo_gdf, buffalo_da)
 
 Python code detail:
 
-::: {.cell execution_count="4"}
+::: {.cell execution_count="6"}
 ``` {.python .cell-code}
 from landmapy.polaris import merge_soil # merge soil data from GDF
 from landmapy.plot import plot_gdf_da # plot GDF over DA
 ```
 :::
 
-:::: {.cell execution_count="5"}
+:::: {.cell execution_count="7"}
 ``` {.python .cell-code}
 print(buffalo_gdf.total_bounds)
 %store -r buffalo_da
@@ -362,7 +446,7 @@ else:
 :::
 ::::
 
-:::: {.cell execution_count="6"}
+:::: {.cell execution_count="8"}
 ``` {.python .cell-code}
 buffalo_gdf['color'] = ['white','red']
 plot_gdf_da(buffalo_gdf, buffalo_da, cmap='viridis')
@@ -407,50 +491,21 @@ plot_gdf_da(buffalo_gdf, slope_da, cmap='terrain')
 
 Python code detail:
 
-::: {.cell execution_count="7"}
+::: {.cell execution_count="9"}
 ``` {.python .cell-code}
 import earthaccess
 from landmapy.srtm import srtm_download, srtm_slope
 ```
 :::
 
-:::: {.cell execution_count="8"}
+::: {.cell execution_count="10"}
 ``` {.python .cell-code}
 project_dir = create_data_dir('habitat')
 elevation_dir = create_data_dir('habitat/srtm')
-elevation_dir
 ```
-
-::: {.cell-output .cell-output-display execution_count="8"}
-    '/Users/brianyandell/earth-analytics/data/habitat/srtm'
 :::
-::::
 
-:::: {.cell execution_count="9"}
-``` {.python .cell-code}
-earthaccess.login()
-datasets = earthaccess.search_datasets(keyword='SRTM DEM', count=11)
-for dataset in datasets:
-    print(dataset['umm']['ShortName'], dataset['umm']['EntryTitle']) # want 'umn'
-# want SRTMGL1? 1 arc second = 30m (also, 3, 30 arc second)
-```
-
-::: {.cell-output .cell-output-stdout}
-    NASADEM_SHHP NASADEM SRTM-only Height and Height Precision Mosaic Global 1 arc second V001
-    NASADEM_SIM NASADEM SRTM Image Mosaic Global 1 arc second V001
-    NASADEM_SSP NASADEM SRTM Subswath Global 1 arc second V001
-    C_Pools_Fluxes_CONUS_1837 CMS: Terrestrial Carbon Stocks, Emissions, and Fluxes for Conterminous US, 2001-2016
-    SRTMGL1 NASA Shuttle Radar Topography Mission Global 1 arc second V003
-    GEDI01_B GEDI L1B Geolocated Waveform Data Global Footprint Level V002
-    GEDI02_B GEDI L2B Canopy Cover and Vertical Profile Metrics Data Global Footprint Level V002
-    NASADEM_HGT NASADEM Merged DEM Global 1 arc second V001
-    SRTMGL3 NASA Shuttle Radar Topography Mission Global 3 arc second V003
-    SRTMGL1_NC NASA Shuttle Radar Topography Mission Global 1 arc second NetCDF V003
-    SRTMGL30 NASA Shuttle Radar Topography Mission Global 30 arc second V002
-:::
-::::
-
-::::: {.cell execution_count="10"}
+::::: {.cell execution_count="11"}
 ``` {.python .cell-code}
 srtm_da = srtm_download(buffalo_gdf, elevation_dir, 0.1)
 plot_gdf_da(buffalo_gdf, srtm_da, cmap='terrain')
@@ -471,7 +526,7 @@ plot_gdf_da(buffalo_gdf, srtm_da, cmap='terrain')
 :::
 :::::
 
-:::: {.cell execution_count="11"}
+:::: {.cell execution_count="12"}
 ``` {.python .cell-code}
 slope_da = srtm_slope(srtm_da)
 plot_gdf_da(buffalo_gdf, slope_da, cmap='terrain')
@@ -485,7 +540,7 @@ plot_gdf_da(buffalo_gdf, slope_da, cmap='terrain')
 Alternate plot only inside grasslands. Want to smooth over `buffalo_gdf`
 to fill in internal holes.
 
-:::: {.cell execution_count="12"}
+:::: {.cell execution_count="13"}
 ``` {.python .cell-code}
 import matplotlib.pyplot as plt # Overlay raster and vector data
 
@@ -519,8 +574,8 @@ Include an arrangement of sites, models, emissions scenarios, and time
 periods that will help you to answer your scientific question.
 
 Project precipation `pr` under representative concentration pathway
-scenarios `rcp45` and `rcp85` for years `2026-2030`. \*\*To be redone
-with
+scenarios `rcp45` and `rcp85` for years `2006-2025` and `2036-2065`.
+\*\*To be redone with
 
 -   new 30-year date ranges
 -   `rcp45` and `rcp85`
@@ -531,26 +586,31 @@ with
 Pseudocode:
 
 ``` python
-maca_df = process_maca({'buffalo': buffalo_gdf})
-maca_2027_year_da = maca_year(maca_df, 0, 2027) # 0 = `rcp85`, 1 = `rcp45`
-plot_gdf_da(buffalo_gdf, maca_2027_year_da)
+info_df, maca_da = process_maca({'buffalo': buffalo_gdf})
+maca_2010_year_da = maca_year(maca_df, 2010) # 0 = `rcp85`, 1 = `rcp45`
+plot_gdf_da(buffalo_gdf, maca_2010_year_da)
 ```
 
 Python code detail:
 
-::: {.cell execution_count="13"}
+::: {.cell execution_count="14"}
 ``` {.python .cell-code}
 from landmapy.thredds import process_maca, maca_year
+from landmapy.plot import plot_gdf_da
 ```
 :::
 
-:::: {.cell execution_count="14"}
+::::: {.cell execution_count="15"}
 ``` {.python .cell-code}
-maca_df = process_maca({'buffalo': buffalo_gdf})
-maca_df[['site_name', 'scenario', 'climate', 'year']]
+info_df, maca_da = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2025])
+info_df
 ```
 
-::: {.cell-output .cell-output-display execution_count="14"}
+::: {.cell-output .cell-output-stdout}
+    Years: 2006 2025
+:::
+
+::: {.cell-output .cell-output-display execution_count="13"}
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
@@ -566,23 +626,44 @@ maca_df[['site_name', 'scenario', 'climate', 'year']]
     }
 </style>
 
-      site_name   scenario   climate   year
-  --- ----------- ---------- --------- ------
-  0   buffalo     pr         rcp85     2026
-  1   buffalo     pr         rcp45     2026
+      site_name   scenario   climate
+  --- ----------- ---------- ---------
+  0   buffalo     pr         rcp85
+  1   buffalo     pr         rcp45
 
 </div>
 :::
-::::
+:::::
 
-:::: {.cell execution_count="15"}
+Want to figure out how to use slider as in species project to display
+all 30 years or sum over years.
+
+::::: {.cell execution_count="16"}
 ``` {.python .cell-code}
-maca_2027_year_da = maca_year(maca_df, 0, 2027) # 0 = `rcp85`, 1 = `rcp45`
-plot_gdf_da(buffalo_gdf, maca_2027_year_da)
+# 0 = `rcp85`, 1 = `rcp45`
+maca_2010_year_da = maca_year(maca_da[0], 2010)
+plot_gdf_da(buffalo_gdf, maca_year(maca_da[0], 2010))
+plot_gdf_da(buffalo_gdf, maca_year(maca_da[1], 2010))
 ```
 
 ::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-maca-output-1.png){#fig-maca}
+![](climate_files/figure-markdown/fig-maca-output-1.png){#fig-maca-1
+ref-parent="fig-maca"}
+:::
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-maca-output-2.png){#fig-maca-2
+ref-parent="fig-maca"}
+:::
+:::::
+
+:::: {.cell execution_count="17"}
+``` {.python .cell-code}
+%store maca_da
+```
+
+::: {.cell-output .cell-output-stdout}
+    Stored 'maca_da' (list)
 :::
 ::::
 
@@ -598,6 +679,36 @@ MACAv2 data
 </div>
 
 YOUR CLIMATE DATA DESCRIPTION AND CITATIONS HERE
+
+#### Dynamic Slider
+
+::: {.cell execution_count="18"}
+``` {.python .cell-code}
+pip install ipympl
+```
+:::
+
+::: {.cell execution_count="19"}
+``` {.python .cell-code}
+%run slider.py
+```
+:::
+
+::: {.cell execution_count="20"}
+``` {.python .cell-code}
+%matplotlib widget
+```
+:::
+
+:::: {.cell execution_count="21"}
+``` {.python .cell-code}
+plot_slider(maca_da[1])
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-macaslider-output-1.png){#fig-macaslider}
+:::
+::::
 
 ## STEP 3: HARMONIZE DATA
 
@@ -622,17 +733,11 @@ resolution as a template!
 See
 [3_harmonize](https://github.com/byandell-envsys/habitatSuitability/blob/main/3_harmonize.ipynb).
 
-:::: {.cell execution_count="16"}
 ``` {.python .cell-code}
 buffalo_sand_da = buffalo_da.rio.reproject_match(slope_da)
-maca_2027_da = maca_2027_year_da.rio.reproject_match(slope_da)
-maca_2027_da.plot()
+maca_2010_da = maca_2010_year_da.rio.reproject_match(slope_da)
+maca_2010_da.plot()
 ```
-
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-reproject-output-1.png){#fig-reproject}
-:::
-::::
 
 ## STEP 4: DEVELOP A FUZZY LOGIC MODEL
 
@@ -682,48 +787,30 @@ Set thresholds:
 -   slope \< 10
 -   pr above 650
 
-::: {.cell execution_count="17"}
+::: {.cell execution_count="23"}
 ``` {.python .cell-code}
 from landmapy.explore import ramp_logic
 ```
 :::
 
-:::: {.cell execution_count="18"}
 ``` {.python .cell-code}
-ramp_logic(maca_2027_da, (500, 550), (700, 750)).plot()
+ramp_logic(maca_2010_da, (500, 550), (700, 750)).plot()
 ```
 
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-rampmaca-output-1.png){#fig-rampmaca}
-:::
-::::
-
-:::: {.cell execution_count="19"}
 ``` {.python .cell-code}
 ramp_logic(buffalo_sand_da, (50, 60), (80, 90)).plot()
 ```
 
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-rampsand-output-1.png){#fig-rampsand}
-:::
-::::
-
-:::: {.cell execution_count="20"}
 ``` {.python .cell-code}
 ramp_logic(slope_da, (0, 5), (15, 20)).plot()
 ```
-
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-rampslope-output-1.png){#fig-rampslope}
-:::
-::::
 
 ## STEP 5: PRESENT YOUR RESULTS
 
 Generate some plots that show your key findings. Don't forget to
 interpret your plots!
 
-::: {.cell highlight="true" execution_count="21"}
+::: {.cell highlight="true" execution_count="27"}
 ``` {.python .cell-code}
 # Create plots
 ```
