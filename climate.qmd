@@ -3,6 +3,19 @@ title: Habitat suitability under climate change
 jupyter: python3
 ---
 
+Left to do:
+
+- Expand out all datasets for comparison.
+  - Code is in place.
+- Harmonize all datasets and build fuzzy logic.
+  - `reproject` code in place.
+  - see
+[notes on skfuzzy](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#fuzzy-logic-model-27-feb-2025)
+- Spruce up graphics, possibly using
+  - slider widget (see code below in [Climate model data](#climate-model-data) section)
+  - matplotlib with multiple subplots (see [6 Mar notes](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#notes-6-mar-2025))
+
+## INTRODUCTION
 
 Our changing climate is changing where key grassland species can live,
 and grassland management and restoration practices will need to take
