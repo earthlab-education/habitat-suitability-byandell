@@ -2,13 +2,17 @@ def plot_slider(data_array):
     """
     Plot slider for DataArray.
 
+    This function requires ipympl to be installed
+    and use of `%matplotlib widget` magic.
     Args:
         data_array (da): DataArray with data
+    Returns:
+        fig, ax, slider: Figure, axis and slider
     """
     import xarray as xr
     import matplotlib.pyplot as plt
     from matplotlib.widgets import Slider
-
+    
     # Assuming data_array is your DataArray with dimensions (time, lat, lon)
     # Create a figure and axis
     fig, ax = plt.subplots()
@@ -45,4 +49,8 @@ def plot_slider(data_array):
 
     slider.on_changed(update_slider_label)
 
-    plt.show()
+    return fig, ax, slider
+
+# %matplotlib widget
+# fig, ax = plot_slider(data_array)
+# plt.show()
