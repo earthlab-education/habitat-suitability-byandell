@@ -243,12 +243,12 @@ Python code detail:
 
 ```{python}
 #| eval: False
-pip install --quiet ~/Documents/GitHub/landmapy
+pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
 ```
 
 ```{python}
-#| eval: False
-pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
+from landmapy.plot import plot_das
+help(plot_das)
 ```
 
 ```{python}
@@ -502,7 +502,7 @@ The MACAv2 dataset is accessible from their
 Include an arrangement of sites, models, emissions scenarios,
 and time periods that will help you to answer your scientific question.
 
-Project precipation `pr` under representative concentration pathway scenarios `rcp45` and `rcp85` for years `2006-2025` and `2036-2065`.
+Project precipation `pr` under representative concentration pathway scenarios `rcp45` and `rcp85` for years `2006-2035` and `2036-2065`.
 **To be redone with
 
 - new 30-year date ranges
@@ -527,11 +527,9 @@ from landmapy.plot import plot_gdf_da
 ```
 
 ```{python}
-info_df, maca_da = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2025])
+info_df, maca_da = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2035])
 info_df
 ```
-
-Want to figure out how to use slider as in species project to display all 30 years or sum over years.
 
 ```{python}
 #| label: fig-maca
@@ -545,6 +543,22 @@ plot_gdf_da(buffalo_gdf, maca_year(maca_da[1], 2010))
 %store maca_da
 ```
 
+```{python}
+#| label: fig-maca85
+from landmapy.plot import plot_das
+
+plot_das(maca_da[0][[0,10,20,29]],
+    titles=maca_da[0][[0,10,20,29]].coords['time'].values)
+```
+
+```{python}
+#| label: fig-maca45
+from landmapy.plot import plot_das
+
+plot_das(maca_da[1][[0,10,20,29]],
+    titles=maca_da[1][[0,10,20,29]].coords['time'].values)
+```
+
 Repeat for `rcp45`. Make nice plot pair.
 Will need to modify `plot_gdf_da()` to return object
 rather than create plot.
@@ -556,24 +570,15 @@ Include a citation of the MACAv2 data</p></div></div>
 
 YOUR CLIMATE DATA DESCRIPTION AND CITATIONS HERE
 
-#### Dynamic Slider
+### Projection Forward
 
 ```{python}
-#| eval: False
-pip install ipympl
+info2_df, maca2_da = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2036,2065])
+info_df
 ```
 
 ```{python}
-%run slider.py
-```
-
-```{python}
-%matplotlib widget
-```
-
-```{python}
-#| label: fig-macaslider
-plot_slider(maca_da[1])
+%store maca2_da
 ```
 
 ## STEP 3: HARMONIZE DATA
@@ -599,14 +604,77 @@ Make sure to use the data source that has the highest resolution as a template!
 See [3_harmonize](https://github.com/byandell-envsys/habitatSuitability/blob/main/3_harmonize.ipynb).
 
 ```{python}
-#| label: fig-reproject
-buffalo_sand_da = buffalo_da.rio.reproject_match(slope_da)
-maca_2010_da = maca_2010_year_da.rio.reproject_match(slope_da)
-maca_2010_da.plot()
+buffalo_sand_da = buffalo_da.rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+maca85_da = maca_da[0].rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+maca45_da = maca_da[1].rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+slope_da_clip = slope_da.rio.clip(buffalo_gdf.geometry)
 ```
 
+```{python}
+maca852_da = maca2_da[0].rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+maca452_da = maca2_da[1].rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+```
+
+```{python}
+slope_da_clip.plot()
+```
+
+```{python}
+buffalo_sand_da.plot()
+```
+
+```{python}
+#| label: fig-maca85time
+from landmapy.plot import plot_das
+
+plot_das(maca85_da[[0,10,20,29]],
+    titles=maca_da[0][[0,10,20,29]].coords['time'].values)
+```
+
+```{python}
+#| label: fig-maca45time
+from landmapy.plot import plot_das
+
+plot_das(maca45_da[[0,10,20,29]],
+    titles=maca_da[1][[0,10,20,29]].coords['time'].values)
+```
+
+```{python}
+import xarray as xr
+
+maca_now_da = xr.concat([maca45_da.mean(dim='time'),
+    (maca85_da.mean(dim='time') - maca45_da.mean(dim='time')),
+    maca85_da.mean(dim='time')], dim='rcp')
+maca_now_da = maca_now_da.assign_coords(rcp=["RCP45","diff","RCP85"])
+maca_fut_da = xr.concat([maca452_da.mean(dim='time'),
+    (maca852_da.mean(dim='time') - maca452_da.mean(dim='time')),
+    maca85_da.mean(dim='time')], dim='rcp')
+maca_fut_da = maca_fut_da.assign_coords(rcp=["RCP45","diff","RCP85"])
+```
+
+```{python}
+#| label: fig-dasnow
+plot_das(maca_now_da, onebar=False)
+```
+
+```{python}
+#| label: fig-dasfut
+plot_das(maca_fut_da, onebar=False)
+```
 
 ## STEP 4: DEVELOP A FUZZY LOGIC MODEL
+
+Rough plan
+
+- Fuzzy Logic on images
+  - migrate from my `ramp_logic()` to skfuzzy (see
+[notes_fuzzy.qmd](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#fuzzy-logic-model-27-feb-2025))
+  - build images and do algebra on them
+- Relationships of values
+  - reorg sand, slope and precip (maca) over time das into dataframe
+(columns for lon, lat, characteristics)
+  - explore with plots using plotnine/ggplot2
+  - perhaps come up with better fuzzy logic
 
 A fuzzy logic model is one that is built on expert knowledge rather than
 training data. You may wish to use the
@@ -618,14 +686,14 @@ for example, the maximum, minimum, and optimal values for soil pH.
 
 To train a fuzzy logic habitat suitability model:
 
-0. Research S. nutans, and find out what optimal values are for each variable
+1. Research S. nutans, and find out what optimal values are for each variable
 you are using (e.g. soil pH, slope, and current climatological annual precipitation). 
 1. For each **digital number** in each raster, assign a **continuous** value
 from 0 to 1 for how close that grid square is to the optimum range
 (1=optimal, 0=incompatible). 
-2. Combine your layers by multiplying them together.
+1. Combine your layers by multiplying them together.
 This will give you a single suitability number for each square.
-3. Optionally, you may apply a suitability threshold to make
+1. Optionally, you may apply a suitability threshold to make
 the most suitable areas pop on your map.
 
 > **Tip**
