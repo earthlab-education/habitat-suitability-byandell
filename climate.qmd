@@ -608,7 +608,7 @@ Make sure to use the data source that has the highest resolution as a template!
 See [3_harmonize](https://github.com/byandell-envsys/habitatSuitability/blob/main/3_harmonize.ipynb).
 
 ```{python}
-%store -r buffalo_gdf, buffalo_da, slope_da, maca_da
+%store -r buffalo_gdf buffalo_da slope_da maca_da
 ```
 
 ```{python}

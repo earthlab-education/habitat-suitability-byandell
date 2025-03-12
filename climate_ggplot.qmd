@@ -11,24 +11,22 @@ pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
 ```
 
 ```{python}
-import pandas as pd
-import geopandas as gpd # read geojson file into gdf
-import matplotlib.pyplot as plt # Overlay raster and vector data
-import xarray as xr
-
-from landmapy.initial import create_data_dir # create (or retrieve) data directory
-from landmapy.plot import plot_gdf_state # plot gdf with state overlay
-from landmapy.plot import plot_gdf_da # plot GDF over DA
-from landmapy.plot import plot_das # plot DAs in rows
-from landmapy.process import da_combine
-from landmapy.polaris import merge_soil # merge soil data from GDF
-from landmapy.srtm import srtm_download, srtm_slope # process SRTM data
-from landmapy.thredds import process_maca, maca_year # process MACA THREDDS
-from landmapy.explore import ramp_logic # ramp for fuzzy logic
+#| eval: false
+pip install --quiet plotnine
 ```
 
 ```{python}
-%store -r buffalo_gdf, buffalo_da, slope_da, maca_da
+import pandas as pd
+import xarray as xr
+import matplotlib.pyplot as plt
+
+from plotnine import ggplot, aes
+from plotnine import geom_point, geom_abline, geom_smooth
+from plotnine import scale_x_log10, scale_y_log10
+```
+
+```{python}
+%store -r buffalo_gdf buffalo_da slope_da maca_da
 ```
 
 ```{python}
@@ -42,12 +40,22 @@ associations among measurements should probably
 be assessed on the lower resolution.
 
 ```{python}
+maca_das = xr.concat(
+    [maca_da[1][list(range(30))].mean(dim='time'),
+    maca_da[0][list(range(30))].mean(dim='time'),
+    maca_da[1][list(range(30,60))].mean(dim='time'),
+    maca_da[0][list(range(30,60))].mean(dim='time')],
+    dim = 'era_rcp')
+era_rcp = ['now45','now85','fut45','fut85']
+maca_das = maca_das.assign_coords(era_rcp=era_rcp)
+```
+
+```{python}
 sand_low_da = buffalo_da.rio.reproject_match(maca_das[0]).rio.clip(buffalo_gdf.geometry)
 slope_low_da = slope_da.rio.reproject_match(maca_das[0]).rio.clip(buffalo_gdf.geometry)
 ```
 
 ```{python}
-era_rcp = ['now45','now85','fut45','fut85']
 maca_low_da = {}
 for i in list(range(maca_das.shape[0])):
     maca_low_da[era_rcp[i]] = maca_das[i].rio.clip(buffalo_gdf.geometry)
@@ -61,10 +69,6 @@ for i in list(range(maca_das.shape[0])):
 ```
 
 Create DataFrame with all measurements.
-
-```{python}
-maca_low_da['now45']
-```
 
 ```{python}
 maca_df = merge_da_df(maca_low_da)
@@ -81,22 +85,51 @@ hab_df
 ```
 
 ```{python}
-hab_df = pd.merge(hab_df, maca_df, on=["x", "y"])
+def ggplot_xy(df, x, y):
+    return (
+        ggplot(df)
+            + aes(x, y)
+            + geom_point()
+            + geom_smooth(se=False, color="blue")
+    )
 ```
 
 ```{python}
-#| eval: false
-pip install --quiet plotnine
-```
-
-```{python}
-#| eval: false
-from plotnine import ggplot, aes, geom_point, geom_abline
-
-(
-    ggplot(hab_df)
-        + aes(x = 'now45', y = 'now85')
-        + geom_abline(slope=1, intercept=0, color="blue")
-        + geom_point()
+p = (
+    ggplot_xy(hab_df, 'now45', 'now85')
+       + geom_abline(slope=1, intercept=0, color="blue")
 )
+p
+```
+
+```{python}
+ggplot_xy(hab_df, 'now45', 'now85')
+```
+
+```{python}
+(
+    ggplot_xy(hab_df, 'now45', 'fut45')
+        + geom_abline(slope=1, intercept=0, color="red")
+)
+```
+
+```{python}
+(
+    ggplot_xy(hab_df, 'sand', 'slope') +
+        scale_x_log10() +
+        scale_y_log10()
+)
+```
+
+```{python}
+(
+    ggplot_xy(hab_df, 'now45', 'slope') +
+        scale_y_log10()
+)
+```
+
+```{python}
+p_sand = [ggplot_xy(hab_df, y, 'sand') for y in era_rcp]
+for p in p_sand:
+    print(p)
 ```
