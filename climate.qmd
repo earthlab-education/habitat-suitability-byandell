@@ -574,7 +574,7 @@ plot_das(maca_now_da, onebar=False)
 ```
 
 ```{python}
-#| label: fig-dasnow
+#| label: fig-dasfut
 #| fig-title: "Mean Change by RCP for 2036-2065"
 plot_das(maca_fut_da, onebar=False)
 ```
@@ -646,78 +646,10 @@ for i in list(range(maca_das.shape[0])):
 ```
 
 ```{python}
+#| label: fig-slopesandclip
+#| fig-title: "Slope and Sand Clipped to Grasslands"
 slope_da_clip.plot()
 sand_da.plot()
-```
-
-```{python}
-%run ~/Documents/GitHub/landmapy/landmapy/process.py
-```
-
-### Scatter Plotting with GGplot
-
-While images should be reprojected to a higher resolution,
-associations among measurements should probably
-be assessed on the lower resolution.
-
-```{python}
-sand_low_da = buffalo_da.rio.reproject_match(maca_das[0]).rio.clip(buffalo_gdf.geometry)
-slope_low_da = slope_da.rio.reproject_match(maca_das[0]).rio.clip(buffalo_gdf.geometry)
-```
-
-```{python}
-era_rcp = ['now45','now85','fut45','fut85']
-maca_low_da = {}
-for i in list(range(maca_das.shape[0])):
-    maca_low_da[era_rcp[i]] = maca_das[i].rio.clip(buffalo_gdf.geometry)
-```
-
-```{python}
-print(sand_low_da.shape)
-print(slope_low_da.shape)
-for i in list(range(maca_das.shape[0])):
-    print(maca_low_da[era_rcp[i]].shape)
-```
-
-Create DataFrame with all measurements.
-
-```{python}
-maca_low_da['now45']
-```
-
-```{python}
-maca_df = merge_da_df(maca_low_da)
-```
-
-```{python}
-hab_df = merge_da_df({'sand': sand_low_da, 'slope': slope_low_da})
-hab_df = hab_df.rename(columns={'y': 'lat', 'x': 'lon'})
-hab_df = pd.merge(maca_df, hab_df, on=['lat','lon'])
-```
-
-```{python}
-hab_df
-```
-
-```{python}
-hab_df = pd.merge(hab_df, maca_df, on=["x", "y"])
-```
-
-```{python}
-#| eval: false
-pip install --quiet plotnine
-```
-
-```{python}
-#| eval: false
-from plotnine import ggplot, aes, geom_point, geom_abline
-
-(
-    ggplot(hab_df)
-        + aes(x = 'now45', y = 'now85')
-        + geom_abline(slope=1, intercept=0, color="blue")
-        + geom_point()
-)
 ```
 
 ## STEP 4: DEVELOP A FUZZY LOGIC MODEL
@@ -779,16 +711,19 @@ Set thresholds:
 - pr above 650
 
 ```{python}
+#| eval: false
 #| label: fig-rampmaca
 ramp_logic(maca_2010_da, (500, 550), (700, 750)).plot()
 ```
 
 ```{python}
+#| eval: false
 #| label: fig-rampsand
 ramp_logic(sand_da, (50, 60), (80, 90)).plot()
 ```
 
 ```{python}
+#| eval: false
 #| label: fig-rampslope
 ramp_logic(slope_da, (0, 5), (15, 20)).plot()
 ```

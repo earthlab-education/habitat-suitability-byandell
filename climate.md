@@ -18,6 +18,33 @@ Left to do:
     -   matplotlib with multiple subplots (see [6 Mar
         notes](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#notes-6-mar-2025))
 
+Python code setup:
+
+::: {.cell execution_count="1"}
+``` {.python .cell-code}
+pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
+```
+:::
+
+::: {.cell execution_count="2"}
+``` {.python .cell-code}
+import pandas as pd
+import geopandas as gpd # read geojson file into gdf
+import matplotlib.pyplot as plt # Overlay raster and vector data
+import xarray as xr
+
+from landmapy.initial import create_data_dir # create (or retrieve) data directory
+from landmapy.plot import plot_gdf_state # plot gdf with state overlay
+from landmapy.plot import plot_gdf_da # plot GDF over DA
+from landmapy.plot import plot_das # plot DAs in rows
+from landmapy.process import da_combine
+from landmapy.polaris import merge_soil # merge soil data from GDF
+from landmapy.srtm import srtm_download, srtm_slope # process SRTM data
+from landmapy.thredds import process_maca, maca_year # process MACA THREDDS
+from landmapy.explore import ramp_logic # ramp for fuzzy logic
+```
+:::
+
 ## INTRODUCTION
 
 Our changing climate is changing where key grassland species can live,
@@ -261,27 +288,7 @@ plot_gdf_state(buffalo_gdf, aiannh=True)
 
 Python code detail:
 
-::: {.cell execution_count="1"}
-``` {.python .cell-code}
-pip install --quiet ~/Documents/GitHub/landmapy
-```
-:::
-
-::: {.cell execution_count="2"}
-``` {.python .cell-code}
-pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
-```
-:::
-
-::: {.cell execution_count="3"}
-``` {.python .cell-code}
-import geopandas as gpd # read geojson file into gdf
-from landmapy.initial import create_data_dir # create (or retrieve) data directory
-from landmapy.plot import plot_gdf_state # plot gdf with state overlay
-```
-:::
-
-:::: {.cell execution_count="4"}
+:::: {.cell execution_count="3"}
 ``` {.python .cell-code}
 %store -r buffalo_gdf
 try:
@@ -308,7 +315,7 @@ else:
 Black line separates South Dakota from Nebraska; red line outlines part
 of Pine Ridge Reservation.
 
-:::: {.cell execution_count="5"}
+:::: {.cell fig-title="Buffalo and Oglala Grasslands with Pine Ridge (red) and SD/NE (black)" execution_count="4"}
 ``` {.python .cell-code}
 plot_gdf_state(buffalo_gdf, aiannh=True)
 ```
@@ -420,14 +427,7 @@ plot_gdf_da(buffalo_gdf, buffalo_da)
 
 Python code detail:
 
-::: {.cell execution_count="6"}
-``` {.python .cell-code}
-from landmapy.polaris import merge_soil # merge soil data from GDF
-from landmapy.plot import plot_gdf_da # plot GDF over DA
-```
-:::
-
-:::: {.cell execution_count="7"}
+:::: {.cell execution_count="5"}
 ``` {.python .cell-code}
 print(buffalo_gdf.total_bounds)
 %store -r buffalo_da
@@ -446,7 +446,7 @@ else:
 :::
 ::::
 
-:::: {.cell execution_count="8"}
+:::: {.cell fig-title="Percent Sand in Soil overlaid by Grasslands" execution_count="6"}
 ``` {.python .cell-code}
 buffalo_gdf['color'] = ['white','red']
 plot_gdf_da(buffalo_gdf, buffalo_da, cmap='viridis')
@@ -484,51 +484,44 @@ Pseudocode:
 ``` python
 elevation_dir = create_data_dir('habitat/srtm')
 srtm_da = srtm_download(buffalo_gdf, elevation_dir, 0.1)
-plot_gdf_da(buffalo_gdf, srtm_da, cmap='terrain')
 slope_da = srtm_slope(srtm_da)
-plot_gdf_da(buffalo_gdf, slope_da, cmap='terrain')
+plot_das(da_combine(srtm_da, slope_da, contrast=False), gdf=buffalo_gdf)
 ```
 
 Python code detail:
 
-::: {.cell execution_count="9"}
-``` {.python .cell-code}
-import earthaccess
-from landmapy.srtm import srtm_download, srtm_slope
-```
-:::
-
-::: {.cell execution_count="10"}
+::: {.cell execution_count="7"}
 ``` {.python .cell-code}
 project_dir = create_data_dir('habitat')
 elevation_dir = create_data_dir('habitat/srtm')
+
+srtm_da = srtm_download(buffalo_gdf, elevation_dir, 0.1)
+slope_da = srtm_slope(srtm_da)
 ```
 :::
 
-::::: {.cell execution_count="11"}
+:::: {.cell execution_count="8"}
 ``` {.python .cell-code}
-srtm_da = srtm_download(buffalo_gdf, elevation_dir, 0.1)
+%store slope_da
+```
+
+::: {.cell-output .cell-output-stdout}
+    Stored 'slope_da' (DataArray)
+:::
+::::
+
+:::: {.cell fig-title="Elevation overlaid by Grasslands" execution_count="9"}
+``` {.python .cell-code}
 plot_gdf_da(buffalo_gdf, srtm_da, cmap='terrain')
 ```
 
-::: {.cell-output .cell-output-stderr}
-    /users/brianyandell/miniconda3/envs/earth-analytics-python/lib/python3.11/site-packages/dask/dataframe/__init__.py:49: FutureWarning: 
-    Dask dataframe query planning is disabled because dask-expr is not installed.
-
-    You can install it with `pip install dask[dataframe]` or `conda install dask`.
-    This will raise in a future version.
-
-      warnings.warn(msg, FutureWarning)
-:::
-
 ::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-srtm-output-2.png){#fig-srtm}
+![](climate_files/figure-markdown/fig-srtm-output-1.png){#fig-srtm}
 :::
-:::::
+::::
 
-:::: {.cell execution_count="12"}
+:::: {.cell fig-title="Slope overlaid by Grasslands" execution_count="10"}
 ``` {.python .cell-code}
-slope_da = srtm_slope(srtm_da)
 plot_gdf_da(buffalo_gdf, slope_da, cmap='terrain')
 ```
 
@@ -540,10 +533,8 @@ plot_gdf_da(buffalo_gdf, slope_da, cmap='terrain')
 Alternate plot only inside grasslands. Want to smooth over `buffalo_gdf`
 to fill in internal holes.
 
-:::: {.cell execution_count="13"}
+:::: {.cell fig-title="Slope clipped by Grasslands" execution_count="11"}
 ``` {.python .cell-code}
-import matplotlib.pyplot as plt # Overlay raster and vector data
-
 slope_clip_da = slope_da.rio.clip(buffalo_gdf.geometry)
 slope_clip_da.plot(cmap='terrain')
 #buffalo_gdf.boundary.plot(ax=plt.gca(), color = "black", linewidth=0.5)
@@ -574,43 +565,32 @@ Include an arrangement of sites, models, emissions scenarios, and time
 periods that will help you to answer your scientific question.
 
 Project precipation `pr` under representative concentration pathway
-scenarios `rcp45` and `rcp85` for years `2006-2025` and `2036-2065`.
-\*\*To be redone with
-
--   new 30-year date ranges
--   `rcp45` and `rcp85`
--   summaries or "movies" over 30-year spans
-
-\*\*
+scenarios `rcp45` and `rcp85` for years `2006-2035` and `2036-2065`.
 
 Pseudocode:
 
 ``` python
 info_df, maca_da = process_maca({'buffalo': buffalo_gdf})
-maca_2010_year_da = maca_year(maca_df, 2010) # 0 = `rcp85`, 1 = `rcp45`
-plot_gdf_da(buffalo_gdf, maca_2010_year_da)
+maca_rcp_2025_da = da_combine(
+    maca_year(maca_da[1], 2025),
+    maca_year(maca_da[0], 2025))
+plot_das(maca_rcp_2025_da, gdf = buffalo_gdf, onebar = False)
 ```
 
 Python code detail:
 
-::: {.cell execution_count="14"}
+::::: {.cell execution_count="12"}
 ``` {.python .cell-code}
-from landmapy.thredds import process_maca, maca_year
-from landmapy.plot import plot_gdf_da
-```
-:::
-
-::::: {.cell execution_count="15"}
-``` {.python .cell-code}
-info_df, maca_da = process_maca({'buffalo': buffalo_gdf}, scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2025])
+info_df, maca_da = process_maca({'buffalo': buffalo_gdf},
+    scenarios=['pr'], climates=['rcp85', 'rcp45'], years=[2006,2065])
 info_df
 ```
 
 ::: {.cell-output .cell-output-stdout}
-    Years: 2006 2025
+    Years: 2006 2065
 :::
 
-::: {.cell-output .cell-output-display execution_count="13"}
+::: {.cell-output .cell-output-display execution_count="63"}
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
@@ -635,29 +615,7 @@ info_df
 :::
 :::::
 
-Want to figure out how to use slider as in species project to display
-all 30 years or sum over years.
-
-::::: {.cell execution_count="16"}
-``` {.python .cell-code}
-# 0 = `rcp85`, 1 = `rcp45`
-maca_2010_year_da = maca_year(maca_da[0], 2010)
-plot_gdf_da(buffalo_gdf, maca_year(maca_da[0], 2010))
-plot_gdf_da(buffalo_gdf, maca_year(maca_da[1], 2010))
-```
-
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-maca-output-1.png){#fig-maca-1
-ref-parent="fig-maca"}
-:::
-
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-maca-output-2.png){#fig-maca-2
-ref-parent="fig-maca"}
-:::
-:::::
-
-:::: {.cell execution_count="17"}
+:::: {.cell execution_count="13"}
 ``` {.python .cell-code}
 %store maca_da
 ```
@@ -667,9 +625,87 @@ ref-parent="fig-maca"}
 :::
 ::::
 
-Repeat for `rcp45`. Make nice plot pair. Will need to modify
-`plot_gdf_da()` to return object rather than create plot. This probably
-has some subtleties.
+::: {.cell execution_count="14"}
+``` {.python .cell-code}
+maca_rcp_2025_da = da_combine(maca_year(maca_da[1], 2025), maca_year(maca_da[0], 2025))
+```
+:::
+
+:::: {.cell fig-title="RCP 4.5 vs 8.5 for 2025" execution_count="15"}
+``` {.python .cell-code}
+# 0 = `rcp85`, 1 = `rcp45`
+plot_das(maca_rcp_2025_da, gdf = buffalo_gdf, onebar = False)
+del maca_rcp_2025_da
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-maca-output-1.png){#fig-maca}
+:::
+::::
+
+::::: {.cell fig-title="RCP 8.5 2006-2065" execution_count="16"}
+``` {.python .cell-code}
+plot_das(maca_da[0][[0,10,20,29]], gdf = buffalo_gdf)
+plot_das(maca_da[0][[59,50,40,30]], gdf = buffalo_gdf)
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-maca85-output-1.png){#fig-maca85-1
+ref-parent="fig-maca85"}
+:::
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-maca85-output-2.png){#fig-maca85-2
+ref-parent="fig-maca85"}
+:::
+:::::
+
+::::: {.cell fig-title="RCP 4.5 2006-2065" execution_count="17"}
+``` {.python .cell-code}
+plot_das(maca_da[1][[0,10,20,29,]], gdf = buffalo_gdf)
+plot_das(maca_da[1][[59,50,40,30]], gdf = buffalo_gdf)
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-maca45-output-1.png){ref-parent="fig-maca45"}
+:::
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-maca45-output-2.png){#fig-maca45-2
+ref-parent="fig-maca45"}
+:::
+:::::
+
+::: {.cell execution_count="18"}
+``` {.python .cell-code}
+maca_now_da = da_combine(
+    maca_da[1][list(range(30))].mean(dim='time'),
+    maca_da[0][list(range(30))].mean(dim='time'))
+maca_fut_da = da_combine(
+    maca_da[1][list(range(30,60))].mean(dim='time'),
+    maca_da[0][list(range(30,60))].mean(dim='time'))
+```
+:::
+
+:::: {.cell fig-title="Mean Change by RCP for 2006-2035" execution_count="19"}
+``` {.python .cell-code}
+plot_das(maca_now_da, onebar=False)
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-dasnow-output-1.png){#fig-dasnow}
+:::
+::::
+
+:::: {.cell fig-title="Mean Change by RCP for 2036-2065" execution_count="20"}
+``` {.python .cell-code}
+plot_das(maca_fut_da, onebar=False)
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-dasfut-output-1.png){#fig-dasfut}
+:::
+::::
 
 **Reflect and Respond:** Make sure to include a description of the
 climate data and how you selected your models. Include a citation of the
@@ -679,36 +715,6 @@ MACAv2 data
 </div>
 
 YOUR CLIMATE DATA DESCRIPTION AND CITATIONS HERE
-
-#### Dynamic Slider
-
-::: {.cell execution_count="18"}
-``` {.python .cell-code}
-pip install ipympl
-```
-:::
-
-::: {.cell execution_count="19"}
-``` {.python .cell-code}
-%run slider.py
-```
-:::
-
-::: {.cell execution_count="20"}
-``` {.python .cell-code}
-%matplotlib widget
-```
-:::
-
-:::: {.cell execution_count="21"}
-``` {.python .cell-code}
-plot_slider(maca_da[1])
-```
-
-::: {.cell-output .cell-output-display}
-![](climate_files/figure-markdown/fig-macaslider-output-1.png){#fig-macaslider}
-:::
-::::
 
 ## STEP 3: HARMONIZE DATA
 
@@ -733,13 +739,89 @@ resolution as a template!
 See
 [3_harmonize](https://github.com/byandell-envsys/habitatSuitability/blob/main/3_harmonize.ipynb).
 
+:::: {.cell execution_count="21"}
 ``` {.python .cell-code}
-buffalo_sand_da = buffalo_da.rio.reproject_match(slope_da)
-maca_2010_da = maca_2010_year_da.rio.reproject_match(slope_da)
-maca_2010_da.plot()
+%store -r buffalo_gdf, buffalo_da, slope_da, maca_da
 ```
 
+::: {.cell-output .cell-output-stdout}
+    no stored variable or alias buffalo_gdf,
+    no stored variable or alias buffalo_da,
+    no stored variable or alias slope_da,
+:::
+::::
+
+:::: {.cell execution_count="22"}
+``` {.python .cell-code}
+print(slope_da.shape)
+print(buffalo_da.shape)
+print(maca_da[0].shape)
+```
+
+::: {.cell-output .cell-output-stdout}
+    (5680, 10504)
+    (4893, 10018)
+    (60, 36, 68)
+:::
+::::
+
+Get mean across 30-year intervals for two eras and two RCP levels.
+
+::: {.cell execution_count="23"}
+``` {.python .cell-code}
+maca_das = xr.concat(
+    [maca_da[1][list(range(30))].mean(dim='time'),
+    maca_da[0][list(range(30))].mean(dim='time'),
+    maca_da[1][list(range(30,60))].mean(dim='time'),
+    maca_da[0][list(range(30,60))].mean(dim='time')],
+    dim = 'era_rcp')
+era_rcp = ['now45','now85','fut45','fut85']
+maca_das = maca_das.assign_coords(era_rcp=era_rcp)
+```
+:::
+
+Reproject sand and maca DAs with slope, and clip to grassland
+boundaries.
+
+::: {.cell execution_count="24"}
+``` {.python .cell-code}
+sand_da = buffalo_da.rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+slope_da_clip = slope_da.rio.clip(buffalo_gdf.geometry)
+```
+:::
+
+::: {.cell execution_count="25"}
+``` {.python .cell-code}
+maca_clip_da = {}
+for i in list(range(maca_das.shape[0])):
+    maca_clip_da[era_rcp[i]] = maca_das[i].rio.reproject_match(slope_da).rio.clip(buffalo_gdf.geometry)
+```
+:::
+
+:::: {.cell fig-title="Slope and Sand Clipped to Grasslands" execution_count="26"}
+``` {.python .cell-code}
+slope_da_clip.plot()
+sand_da.plot()
+```
+
+::: {.cell-output .cell-output-display}
+![](climate_files/figure-markdown/fig-slopesandclip-output-1.png){#fig-slopesandclip}
+:::
+::::
+
 ## STEP 4: DEVELOP A FUZZY LOGIC MODEL
+
+Rough plan:
+
+-   Fuzzy Logic on images
+    -   migrate from my `ramp_logic()` to skfuzzy (see
+        [notes_fuzzy.qmd](https://github.com/byandell-envsys/landmapy/blob/main/notes.qmd#fuzzy-logic-model-27-feb-2025))
+    -   build images and do algebra on them
+-   Relationships of values
+    -   reorg sand, slope and precip (maca) over time das into dataframe
+        (columns for lon, lat, characteristics)
+    -   explore with plots using plotnine/ggplot2
+    -   perhaps come up with better fuzzy logic
 
 A fuzzy logic model is one that is built on expert knowledge rather than
 training data. You may wish to use the
@@ -751,15 +833,15 @@ maximum, minimum, and optimal values for soil pH.
 
 To train a fuzzy logic habitat suitability model:
 
-0.  Research S. nutans, and find out what optimal values are for each
+1.  Research S. nutans, and find out what optimal values are for each
     variable you are using (e.g. soil pH, slope, and current
     climatological annual precipitation).
-1.  For each **digital number** in each raster, assign a **continuous**
+2.  For each **digital number** in each raster, assign a **continuous**
     value from 0 to 1 for how close that grid square is to the optimum
     range (1=optimal, 0=incompatible).
-2.  Combine your layers by multiplying them together. This will give you
+3.  Combine your layers by multiplying them together. This will give you
     a single suitability number for each square.
-3.  Optionally, you may apply a suitability threshold to make the most
+4.  Optionally, you may apply a suitability threshold to make the most
     suitable areas pop on your map.
 
 > **Tip**
@@ -787,18 +869,12 @@ Set thresholds:
 -   slope \< 10
 -   pr above 650
 
-::: {.cell execution_count="23"}
-``` {.python .cell-code}
-from landmapy.explore import ramp_logic
-```
-:::
-
 ``` {.python .cell-code}
 ramp_logic(maca_2010_da, (500, 550), (700, 750)).plot()
 ```
 
 ``` {.python .cell-code}
-ramp_logic(buffalo_sand_da, (50, 60), (80, 90)).plot()
+ramp_logic(sand_da, (50, 60), (80, 90)).plot()
 ```
 
 ``` {.python .cell-code}
@@ -810,7 +886,7 @@ ramp_logic(slope_da, (0, 5), (15, 20)).plot()
 Generate some plots that show your key findings. Don't forget to
 interpret your plots!
 
-::: {.cell highlight="true" execution_count="27"}
+::: {.cell highlight="true" execution_count="30"}
 ``` {.python .cell-code}
 # Create plots
 ```
