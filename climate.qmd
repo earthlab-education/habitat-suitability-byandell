@@ -307,7 +307,7 @@ These time periods should help you to answer your scientific question.
 
 #### Selected time periods
 
-- `2006-2025`: recent 30 years
+- `2006-2035`: recent 30 years
 - `2036-2065`: 2050 +/- 15 years
 
 ### Climate models

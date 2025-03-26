@@ -2,17 +2,8 @@
 ### Scatter Plots with GGplot
 
 ```{python}
-%run ~/Documents/GitHub/landmapy/landmapy/process.py
-```
-
-```{python}
-#| eval: False
-pip install --quiet git+https://github.com/byandell-envsys/landmapy.git
-```
-
-```{python}
 #| eval: false
-pip install --quiet plotnine
+pip install --quiet plotnine scikit-misc
 ```
 
 ```{python}
@@ -20,9 +11,11 @@ import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
 
-from plotnine import ggplot, aes
-from plotnine import geom_point, geom_abline, geom_smooth
-from plotnine import scale_x_log10, scale_y_log10
+from landmapy.process import merge_da_df
+```
+
+```{python}
+%run ggplot.py
 ```
 
 ```{python}
@@ -85,51 +78,84 @@ hab_df
 ```
 
 ```{python}
-def ggplot_xy(df, x, y):
-    return (
-        ggplot(df)
-            + aes(x, y)
-            + geom_point()
-            + geom_smooth(se=False, color="blue")
-    )
+ggplot_xy(hab_df, 'now45', 'now85', identity=True)
 ```
 
 ```{python}
-p = (
-    ggplot_xy(hab_df, 'now45', 'now85')
-       + geom_abline(slope=1, intercept=0, color="blue")
-)
-p
+ggplot_xy(hab_df, 'now45', 'fut45', identity=True)
 ```
 
 ```{python}
-ggplot_xy(hab_df, 'now45', 'now85')
+ggplot_xy(hab_df, 'sand', 'slope', log = ['x','y'])
 ```
 
 ```{python}
-(
-    ggplot_xy(hab_df, 'now45', 'fut45')
-        + geom_abline(slope=1, intercept=0, color="red")
-)
+ggplot_xy(hab_df, 'now45', 'slope', log = ['y'])
 ```
 
 ```{python}
-(
-    ggplot_xy(hab_df, 'sand', 'slope') +
-        scale_x_log10() +
-        scale_y_log10()
-)
-```
-
-```{python}
-(
-    ggplot_xy(hab_df, 'now45', 'slope') +
-        scale_y_log10()
-)
-```
-
-```{python}
-p_sand = [ggplot_xy(hab_df, y, 'sand') for y in era_rcp]
+p_sand = [ggplot_xy(hab_df, y, 'sand', log=['y']) for y in era_rcp]
 for p in p_sand:
     print(p)
+```
+
+## Look over time at MACA
+
+### Pivot (melt) to longer format
+
+For one set:
+
+```{python}
+tmp = maca_da[1][list(range(30))]
+now45_dict = {time: tmp[time, :, :] for time in range(tmp.shape[0])}
+now45_df = merge_da_df(now45_dict, quiet=True).melt(id_vars=['lat','lon'], var_name='time')
+now45_df['time'] = 2006 + now45_df['time'].astype(int)
+```
+
+```{python}
+ggplot_xy(now45_df, 'time','value', method="loess")
+```
+
+For all sets:
+
+    [maca_da[1][list(range(30))].mean(dim='time'),
+    maca_da[0][list(range(30))].mean(dim='time'),
+    maca_da[1][list(range(30,60))].mean(dim='time'),
+    maca_da[0][list(range(30,60))].mean(dim='time')],
+era_rcp = ['now45','now85','fut45','fut85']
+
+```{python}
+def melt_maca(maca_da, rcp = ['85','45'], yearone = 2006):
+    import pandas as pd
+    out_df = pd.DataFrame(columns=['lat', 'lon','time','rcp'])
+    for i in [1,0]:
+        tmp = maca_da[1]
+        ntime = tmp.shape[0]
+        tmp = {time: tmp[time, :, :] for time in range(ntime)}
+        new_df = merge_da_df(tmp, quiet=True).melt(
+            id_vars=['lat','lon'], var_name='time')
+        new_df['time'] = new_df['time'].astype(int)
+        new_df['rcp'] = rcp[i]
+        new_df['period'] = ['now' if time < (ntime / 2) else 'fut' for time in new_df['time']]
+        new_df['time'] += yearone
+        out_df = pd.concat([out_df, new_df], ignore_index=True)
+
+    # Make sure time is integer
+    out_df['time'] = out_df['time'].astype(int)
+    out_df['rcp'] = pd.Categorical(out_df['rcp'], categories=['45', '85'], ordered=True)
+    out_df['period'] = pd.Categorical(out_df['period'], categories=['now', 'fut'], ordered=True)
+    return out_df
+```
+
+```{python}
+year_df = melt_maca(maca_da)
+year_df
+```
+
+```{python}
+from plotnine import facet_grid
+(
+    ggplot_xy(year_df, 'time','value', method="loess") +
+    facet_grid(rows = "rcp", cols = "period", scales="free_x")
+)
 ```
